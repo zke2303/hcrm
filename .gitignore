@@ -1,0 +1,46 @@
+# ########################################################
+# General / IDE / OS
+# ########################################################
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+.idea/
+.vscode/
+*.log
+.agent/
+.claude/
+.gemini/
+
+# ########################################################
+# Backend (Go)
+# ########################################################
+# 二进制构建产物
+backend/cmd/server/server
+backend/bin/
+
+# 依赖与覆盖率
+backend/vendor/
+backend/coverage.out
+
+# 配置文件 (忽略真实配置，保留示例)
+backend/configs/config.yaml
+!backend/configs/config.yaml.example
+
+# ########################################################
+# Frontend (React/Vite)
+# ########################################################
+# 依赖
+frontend/node_modules/
+
+# 构建产物
+frontend/dist/
+frontend/build/
+
+# 日志与缓存
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
+frontend/.vite
