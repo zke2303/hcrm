@@ -1,137 +1,137 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { Key, ShieldAlert, X } from 'lucide-react';
-import React, { useState } from 'react';
-import { userApi } from '../api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { KeyRound, Loader2, X } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { useUpdateUser } from '../hooks/useUsers';
+import type { User } from '../types';
+
+const resetPwdSchema = z.object({
+  password: z.string().min(6, '密码至少6个字符'),
+});
+
+type ResetPwdFormData = z.infer<typeof resetPwdSchema>;
 
 interface ResetPasswordDialogProps {
   open: boolean;
   onClose: () => void;
-  userId: number;
-  username: string;
+  user: User | null;
 }
 
-const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ open, onClose, userId, username }) => {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ open, onClose, user }) => {
+  const updateUser = useUpdateUser();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password.length < 6) {
-      setError('密码长度至少为 6 位');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPwdFormData>({
+    resolver: zodResolver(resetPwdSchema),
+    defaultValues: {
+      password: '',
+    },
+  });
 
-    setLoading(true);
-    setError('');
+  useEffect(() => {
+    if (open) {
+      reset({ password: '' });
+    }
+  }, [open, reset]);
+
+  const onSubmit = async (data: ResetPwdFormData) => {
+    if (!user) return;
     try {
-      await userApi.resetPassword(userId, password);
+      await updateUser.mutateAsync({
+        id: user.id,
+        data: {
+          realName: user.realName,
+          phone: user.phone,
+          departmentId: user.departmentId,
+          password: data.password 
+        } as any
+      });
       alert('密码重置成功');
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || '重置失败');
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
-    <AnimatePresence>
+    <>
       {open && (
-        <>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex-center"
           />
           
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[51] overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 bg-red-50/50">
-              <h3 className="text-lg font-bold flex items-center gap-2 text-red-700">
-                <ShieldAlert size={20} />
+          <div className="relative w-full max-w-md bg-white rounded-xl shadow-2xl flex flex-col mx-auto overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                <KeyRound size={20} className="text-orange-500" />
                 重置密码
               </h3>
               <button 
                 onClick={onClose} 
-                className="p-1 hover:bg-black/5 rounded-full transition-colors"
+                className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors"
+                type="button"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <p className="text-sm text-text-sub">
-                正在为用户 <span className="font-bold text-text-main">{username}</span> 重置登录密码。
-              </p>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-text-sub">新密码</label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                  <input 
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="请输入新密码"
-                    className="w-full pl-10 pr-4 py-2 bg-black/5 border border-transparent rounded-lg focus:bg-white focus:border-red-500 outline-none transition-all"
-                  />
-                </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 sm:p-8">
+              <div className="mb-6 pb-4 border-b border-gray-100 text-sm">
+                <p className="text-gray-600 mb-1">正在为以下用户重置密码：</p>
+                <p className="font-semibold text-gray-900 text-base">{user?.realName || user?.username || '-'}</p>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-text-sub">确认新密码</label>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-gray-700 block">
+                  新密码 <span className="text-red-500">*</span>
+                </label>
                 <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
                   <input 
-                    type="password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="请再次输入新密码"
-                    className="w-full pl-10 pr-4 py-2 bg-black/5 border border-transparent rounded-lg focus:bg-white focus:border-red-500 outline-none transition-all"
+                    type="text"
+                    {...register('password')}
+                    placeholder="请输入新密码 (至少6位)"
+                    className={`w-full px-4 py-2.5 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
+                    autoComplete="off"
                   />
+                  {errors.password && (
+                    <p className="mt-1.5 text-sm text-red-500">{(errors.password.message as string)}</p>
+                  )}
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  重置后，该用户可以使用新密码登录系统。
+                </p>
               </div>
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600 flex items-center gap-2">
-                  <ShieldAlert size={14} />
-                  {error}
-                </div>
-              )}
-
-              <div className="mt-6 flex items-center justify-end gap-3">
+              <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-3">
                 <button 
                   type="button" 
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-bold border border-black/10 rounded-lg hover:bg-black/5"
+                  className="px-5 py-2.5 border border-gray-300 shadow-sm text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   取消
                 </button>
                 <button 
                   type="submit" 
-                  disabled={loading}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-200 disabled:opacity-50 transition-all"
+                  disabled={isSubmitting}
+                  className="flex items-center justify-center min-w-[90px] gap-2 px-5 py-2.5 shadow-sm bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-70 transition-colors"
                 >
-                  {loading ? '重置中...' : '确认重置'}
+                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                  {isSubmitting ? '保存中...' : '确认重置'}
                 </button>
               </div>
             </form>
-          </motion.div>
-        </>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 };
 

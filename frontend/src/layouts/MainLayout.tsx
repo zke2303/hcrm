@@ -15,8 +15,8 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="app-main min-h-screen flex flex-col">
-      <header className="app-header glass-effect h-16 shrink-0">
+    <div className="app-main min-h-screen">
+      <header className="app-header glass-effect">
         <div className="logo flex items-center">
           <div className="p-2 bg-primary/10 rounded-lg mr-3">
             <LayoutDashboard size={20} className="text-primary" />
@@ -38,10 +38,10 @@ const MainLayout: React.FC = () => {
         </div>
       </header>
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="app-wrapper">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-black/5 bg-white/50 backdrop-blur-sm p-4 flex flex-col gap-2">
-          <div className="text-[10px] font-bold text-text-sub/50 uppercase tracking-widest px-4 mb-2">主菜单</div>
+        <aside className="app-sidebar backdrop-blur-sm">
+          <div className="text-[10px] font-bold text-text-sub opacity-50 uppercase tracking-widest px-4 mb-2">主菜单</div>
           
           <button 
             onClick={() => navigate('/')}
@@ -51,7 +51,7 @@ const MainLayout: React.FC = () => {
             工作台
           </button>
 
-          <div className="text-[10px] font-bold text-text-sub/50 uppercase tracking-widest px-4 mt-6 mb-2">系统管理</div>
+          <div className="text-[10px] font-bold text-text-sub opacity-50 uppercase tracking-widest px-4 mt-6 mb-2">系统管理</div>
           
           <button 
             onClick={() => navigate('/system/users')}
@@ -70,7 +70,7 @@ const MainLayout: React.FC = () => {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-8">
+        <main className="app-content">
            <Outlet />
         </main>
       </div>

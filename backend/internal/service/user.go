@@ -23,12 +23,14 @@ type UserService interface {
 	UpdateStatus(ctx context.Context, id uint, status int8) error
 	ResetPassword(ctx context.Context, id uint, password string) error
 	ListRoles(ctx context.Context) ([]*vo.RoleVO, error)
+	ListTitles(ctx context.Context) ([]*vo.TitleVO, error)
 }
 
 type userService struct {
 	userRepo   repository.UserRepository
 	doctorRepo repository.DoctorRepository
 	deptRepo   repository.DepartmentRepository
+	titleRepo  repository.TitleRepository
 }
 
 // NewUserService 创建用户服务
@@ -36,11 +38,13 @@ func NewUserService(
 	userRepo repository.UserRepository,
 	doctorRepo repository.DoctorRepository,
 	deptRepo repository.DepartmentRepository,
+	titleRepo repository.TitleRepository,
 ) UserService {
 	return &userService{
 		userRepo:   userRepo,
 		doctorRepo: doctorRepo,
 		deptRepo:   deptRepo,
+		titleRepo:  titleRepo,
 	}
 }
 
@@ -271,4 +275,21 @@ func (s *userService) ListRoles(ctx context.Context) ([]*vo.RoleVO, error) {
 	}
 
 	return converter.RoleListToVO(roles), nil
+}
+
+func (s *userService) ListTitles(ctx context.Context) ([]*vo.TitleVO, error) {
+	titles, err := s.titleRepo.FindAll(ctx)
+	if err != nil {
+		return nil, errors.ErrDatabase.WithError(err)
+	}
+
+	res := make([]*vo.TitleVO, len(titles))
+	for i, t := range titles {
+		res[i] = &vo.TitleVO{
+			ID:        t.ID,
+			Name:      t.Name,
+			SortOrder: t.SortOrder,
+		}
+	}
+	return res, nil
 }

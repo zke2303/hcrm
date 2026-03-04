@@ -54,7 +54,8 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 	authHandler := handler.NewAuthHandler(authService)
 	doctorRepository := repository.NewDoctorRepository(db)
 	departmentRepository := repository.NewDepartmentRepository(db)
-	userService := service.NewUserService(userRepository, doctorRepository, departmentRepository)
+	titleRepository := repository.NewTitleRepository(db)
+	userService := service.NewUserService(userRepository, doctorRepository, departmentRepository, titleRepository)
 	userHandler := handler.NewUserHandler(userService)
 	appApp := app.New(config, zapLogger, db, client, healthHandler, authHandler, userHandler, jwtHelper)
 	return appApp, func() {

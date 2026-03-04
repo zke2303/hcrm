@@ -64,3 +64,10 @@ export function useRoles() {
     queryFn: () => userApi.getRoles(),
   });
 }
+
+export function useTitles() {
+  return useQuery({
+    queryKey: ['titles'],
+    queryFn: () => userApi.getTitles(),
+  });
+}

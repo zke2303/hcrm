@@ -200,12 +200,28 @@ func (h *UserHandler) ListRoles(c *gin.Context) {
 	Success(c, roles)
 }
 
+// ListTitles 获取所有职称列表
+func (h *UserHandler) ListTitles(c *gin.Context) {
+	titles, err := h.userSvc.ListTitles(c.Request.Context())
+	if err != nil {
+		if e, ok := err.(*errors.Error); ok {
+			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
+		} else {
+			Fail(c, errors.ErrInternal.Code, err.Error())
+		}
+		return
+	}
+
+	Success(c, titles)
+}
+
 // RegisterUserRoutes 注册用户模块路由
 func RegisterUserRoutes(r *gin.RouterGroup, h *UserHandler) {
 	users := r.Group("/v1/users")
 	{
 		users.GET("", h.List)
-		users.GET("/roles", h.ListRoles) // 注意：路由顺序，roles 需要在 /:id 前面
+		users.GET("/roles", h.ListRoles)
+		users.GET("/titles", h.ListTitles)
 		users.POST("", h.Create)
 		users.GET("/:id", h.GetByID)
 		users.PUT("/:id", h.Update)

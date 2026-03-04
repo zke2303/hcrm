@@ -26,6 +26,12 @@ export interface Role {
   description?: string;
 }
 
+export interface Title {
+  id: number;
+  name: string;
+  sortOrder?: number;
+}
+
 export interface CreateUserRequest {
   username: string;
   password?: string;

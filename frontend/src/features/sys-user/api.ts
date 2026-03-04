@@ -3,6 +3,7 @@ import type {
     ApiResponse,
     CreateUserRequest,
     Role,
+    Title,
     UpdateUserRequest,
     User,
     UserListParams,
@@ -41,4 +42,8 @@ export const userApi = {
   // 获取所有可用角色
   getRoles: () => 
     axios.get<any, ApiResponse<Role[]>>('/v1/users/roles'),
+
+  // 获取所有职称字典
+  getTitles: () =>
+    axios.get<any, ApiResponse<Title[]>>('/v1/users/titles'),
 };

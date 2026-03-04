@@ -1,21 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Building,
-    Edit3,
-    Key,
-    Mail,
-    Phone,
-    Plus,
-    ShieldCheck,
-    Stethoscope,
-    User,
-    X
-} from 'lucide-react';
+import { Edit3, Loader2, Plus, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useCreateUser, useUpdateUser } from '../hooks/useUsers';
+import { useCreateUser, useTitles, useUpdateUser } from '../hooks/useUsers';
 import type { User as UserType } from '../types';
 
 const userSchema = z.object({
@@ -45,6 +33,8 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const isEdit = !!user;
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
+  const { data: titlesResp } = useTitles();
+  const titles = titlesResp?.data || [];
 
   const {
     register,
@@ -105,188 +95,184 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   };
 
   return (
-    <AnimatePresence>
+    <>
       {open && (
-        <>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div 
+            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex-center"
           />
           
-          {/* Dialog */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-[51] overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 bg-primary/5">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                {isEdit ? <Edit3 size={20} className="text-primary" /> : <Plus size={20} className="text-primary" />}
-                {isEdit ? '编辑用户信息' : '创建新用户'}
+          {/* Dialog Panel - width expanded slightly, max-height bound */}
+          <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] mx-auto overflow-hidden">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                {isEdit ? <Edit3 size={20} className="text-blue-600" /> : <Plus size={20} className="text-blue-600" />}
+                {isEdit ? '编辑用户' : '新增用户'}
               </h3>
               <button 
                 onClick={onClose} 
-                className="p-1 hover:bg-black/5 rounded-full transition-colors"
+                className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-h-[80vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                {/* 账号信息 */}
-                <div className="col-span-2 text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <ShieldCheck size={14} /> 账号与安全
+            {/* Content Body */}
+            <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-6 md:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                
+                {/* 账号信息 Divider */}
+                <div className="col-span-1 md:col-span-2 text-base font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                  账号信息
                 </div>
                 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-text-sub">用户账号*</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                    <input 
-                      {...register('username')}
-                      disabled={isEdit}
-                      className={`w-full pl-10 pr-4 py-2 bg-black/5 border ${errors.username ? 'border-red-500' : 'border-transparent'} rounded-lg focus:bg-white focus:border-primary outline-none transition-all`}
-                    />
-                  </div>
-                  {errors.username && <p className="text-xs text-red-500">{(errors.username.message as string)}</p>}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">登录账号 <span className="text-red-500">*</span></label>
+                  <input 
+                    {...register('username')}
+                    disabled={isEdit}
+                    placeholder="请输入登录账号"
+                    className={`w-full px-4 py-2 bg-white border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 transition-shadow`}
+                  />
+                  {errors.username && <p className="text-sm text-red-500">{(errors.username.message as string)}</p>}
                 </div>
 
                 {!isEdit && (
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-text-sub">登录密码*</label>
-                    <div className="relative">
-                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                       <input 
-                         type="password"
-                         {...register('password')}
-                         className={`w-full pl-10 pr-4 py-2 bg-black/5 border ${errors.password ? 'border-red-500' : 'border-transparent'} rounded-lg focus:bg-white focus:border-primary outline-none transition-all`}
-                       />
-                    </div>
-                    {errors.password && <p className="text-xs text-red-500">{(errors.password.message as string)}</p>}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">初始密码 <span className="text-red-500">*</span></label>
+                    <input 
+                      type="password"
+                      {...register('password')}
+                      placeholder="请输入初始密码"
+                      className={`w-full px-4 py-2 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
+                    />
+                    {errors.password && <p className="text-sm text-red-500">{(errors.password.message as string)}</p>}
                   </div>
                  )}
 
-                {/* 个人资料 */}
-                <div className="col-span-2 text-xs font-bold text-primary uppercase tracking-wider mt-4 mb-2 flex items-center gap-2">
-                  <Building size={14} /> 基本资料
+                {/* 如果是编辑状态占位，让两列对齐 */}
+                {isEdit && <div className="hidden md:block"></div>}
+
+                {/* 基本资料 Divider */}
+                <div className="col-span-1 md:col-span-2 text-base font-semibold text-gray-900 border-b border-gray-200 pb-2 mt-4">
+                  基本资料
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-text-sub">真实姓名*</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">真实姓名 <span className="text-red-500">*</span></label>
                   <input 
                     {...register('realName')}
-                    className={`w-full px-4 py-2 bg-black/5 border ${errors.realName ? 'border-red-500' : 'border-transparent'} rounded-lg focus:bg-white focus:border-primary outline-none transition-all`}
+                    placeholder="请输入真实姓名"
+                    className={`w-full px-4 py-2 bg-white border ${errors.realName ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
                   />
-                  {errors.realName && <p className="text-xs text-red-500">{(errors.realName.message as string)}</p>}
+                  {errors.realName && <p className="text-sm text-red-500">{(errors.realName.message as string)}</p>}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-text-sub">联系电话*</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                    <input 
-                      {...register('phone')}
-                      className={`w-full pl-10 pr-4 py-2 bg-black/5 border ${errors.phone ? 'border-red-500' : 'border-transparent'} rounded-lg focus:bg-white focus:border-primary outline-none transition-all`}
-                    />
-                  </div>
-                  {errors.phone && <p className="text-xs text-red-500">{(errors.phone.message as string)}</p>}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">手机号码 <span className="text-red-500">*</span></label>
+                  <input 
+                    {...register('phone')}
+                    placeholder="请输入手机号码"
+                    className={`w-full px-4 py-2 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
+                  />
+                  {errors.phone && <p className="text-sm text-red-500">{(errors.phone.message as string)}</p>}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-text-sub">电子邮箱</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30" size={16} />
-                    <input 
-                      {...register('email')}
-                      className={`w-full pl-10 pr-4 py-2 bg-black/5 border border-transparent rounded-lg focus:bg-white focus:border-primary outline-none transition-all`}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">电子邮箱</label>
+                  <input 
+                    {...register('email')}
+                    placeholder="选填"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                  />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-text-sub">工号</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">工号</label>
                   <input 
                     {...register('employeeNo')}
-                    className="w-full px-4 py-2 bg-black/5 border border-transparent rounded-lg focus:bg-white focus:border-primary outline-none transition-all"
+                    placeholder="选填"
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                   />
                 </div>
 
-                {/* 医护联动 */}
-                <div className="col-span-2 mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                   <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Stethoscope size={18} className="text-primary" />
-                        <span className="font-bold text-sm">医务人员档案联动</span>
-                      </div>
+                {/* 医生开关 */}
+                <div className="col-span-1 md:col-span-2 mt-4 p-5 border border-blue-100 bg-blue-50/50 rounded-lg">
+                   <div className="flex items-center gap-3">
                       <input 
                         type="checkbox" 
                         {...register('isDoctor')}
-                        className="w-5 h-5 accent-primary cursor-pointer"
+                        id="isDoctorCheckbox"
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
+                      <label htmlFor="isDoctorCheckbox" className="font-semibold text-sm text-gray-900 cursor-pointer select-none">
+                        标记为医务人员 (开启医生档案)
+                      </label>
                    </div>
                    
                    {isDoctor && (
-                     <motion.div 
-                       initial={{ opacity: 0, height: 0 }}
-                       animate={{ opacity: 1, height: 'auto' }}
-                       className="grid grid-cols-2 gap-4 mt-2"
-                     >
-                        <div className="space-y-1">
-                          <label className="text-xs font-semibold text-text-sub">职务/职称</label>
-                          <input 
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-blue-100">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">医疗职称/职务</label>
+                          <select 
                             {...register('title')}
-                            placeholder="如：副主任医师"
-                            className="w-full px-3 py-1.5 text-sm bg-white border border-black/10 rounded-lg outline-none focus:border-primary"
-                          />
+                            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">请选择职称</option>
+                            {titles.map(t => (
+                              <option key={t.id} value={t.name}>{t.name}</option>
+                            ))}
+                          </select>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-xs font-semibold text-text-sub">擅长领域</label>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">专业领域</label>
                           <input 
                             {...register('specialty')}
-                            placeholder="如：心血管、高血压"
-                            className="w-full px-3 py-1.5 text-sm bg-white border border-black/10 rounded-lg outline-none focus:border-primary"
+                            placeholder="如: 心血管内科"
+                            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
-                        <div className="col-span-2 space-y-1">
-                          <label className="text-xs font-semibold text-text-sub">个人简介</label>
+                        <div className="col-span-1 md:col-span-2 space-y-2">
+                          <label className="text-sm font-medium text-gray-700">个人简介</label>
                           <textarea 
                             {...register('introduction')}
                             rows={3}
-                            className="w-full px-3 py-1.5 text-sm bg-white border border-black/10 rounded-lg outline-none focus:border-primary resize-none"
+                            placeholder="可选填医生简介信息..."
+                            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                           />
                         </div>
-                     </motion.div>
+                     </div>
                    )}
                 </div>
               </div>
 
-              <div className="mt-8 flex items-center justify-end gap-3 px-2">
+              {/* Action Buttons */}
+              <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
                 <button 
                   type="button" 
                   onClick={onClose}
-                  className="px-6 py-2 border border-black/10 rounded-lg text-sm font-bold hover:bg-black/5 transition-all"
+                  className="px-5 py-2.5 border border-gray-300 shadow-sm text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   取消
                 </button>
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="px-8 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-light shadow-lg shadow-primary/20 disabled:opacity-50 transition-all"
+                  className="flex items-center justify-center min-w-[90px] gap-2 px-5 py-2.5 shadow-sm bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 transition-colors"
                 >
-                  {isSubmitting ? '提交中...' : isEdit ? '保存更改' : '立即创建'}
+                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                  {isSubmitting ? '保存中...' : '确定'}
                 </button>
               </div>
             </form>
-          </motion.div>
-        </>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 };
 

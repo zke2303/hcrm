@@ -39,6 +39,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		repository.NewDoctorRepository,
 		repository.NewDepartmentRepository,
 		repository.NewOperationLogRepository,
+		repository.NewTitleRepository,
 		// 服务层
 		service.NewHealthService,
 		service.NewAuthService,

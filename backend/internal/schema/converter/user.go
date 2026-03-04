@@ -23,6 +23,7 @@ func UserToVO(user *model.User, dept *model.Department, roles []model.Role, doct
 		Status:       user.Status,
 		LastLoginAt:  user.LastLoginAt,
 		CreatedAt:    user.CreatedAt,
+		Roles:        make([]vo.RoleVO, 0),
 	}
 
 	if dept != nil {
