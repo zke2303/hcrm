@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, AlertCircle, ChevronRight, Lock, User } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import './Login.css';
 
@@ -12,8 +13,17 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  const isLogin = useAuthStore(state => state.isLogin);
   const setLogin = useAuthStore(state => state.setLogin);
+  const navigate = useNavigate();
+
+  // 如果已经登录，直接跳转到首页
+  useEffect(() => {
+    if (isLogin) {
+      navigate('/', { replace: true });
+    }
+  }, [isLogin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +39,8 @@ const Login: React.FC = () => {
       const { accessToken, user } = response.data.data;
       setLogin(accessToken, user);
       
-      // 登录成功转向 (此处暂时不跳转)
-      console.log('Login Success:', user);
+      // 登录成功转向
+      navigate('/', { replace: true });
     } catch (err: any) {
       const msg = err.response?.data?.message || '登录请求失败，请检查网络或配置';
       setError(msg);
