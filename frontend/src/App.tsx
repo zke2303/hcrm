@@ -1,11 +1,22 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import AuthGuard from './components/Auth/AuthGuard';
 import { HasPermission } from './components/Auth/HasPermission';
+import UserList from './features/sys-user/components/UserList';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login/Login';
 import { useAuthStore } from './store/useAuthStore';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 const Dashboard: React.FC = () => {
   const user = useAuthStore(state => state.user);
@@ -31,21 +42,28 @@ const Dashboard: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={
-          <AuthGuard>
-            <MainLayout />
-          </AuthGuard>
-        }>
-          <Route index element={<Dashboard />} />
-        </Route>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={
+            <AuthGuard>
+              <MainLayout />
+            </AuthGuard>
+          }>
+            <Route index element={<Dashboard />} />
+            
+            {/* 系统管理 */}
+            <Route path="system">
+              <Route path="users" element={<UserList />} />
+            </Route>
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
