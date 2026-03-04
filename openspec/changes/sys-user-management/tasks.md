@@ -1,6 +1,6 @@
 ## 1. 后端 API 开发
 
-- [ ] 1.1 (P0): 定义用户管理相关的 DTO (Create/Update/List Request) 和 VO (User Response)。
+- [x] 1.1 (P0): 定义用户管理相关的 DTO (Create/Update/List Request) 和 VO (User Response)。
 - [ ] 1.2 (P0): 在 `Repository` 层实现用户基础信息的 CRUD、分页查询及状态切换逻辑，确保适配软删除。
 - [ ] 1.3 (P0): 在 `Service` 层实现用户管理的业务逻辑，包含密码 Bcrypt 哈希处理和事务管理（关联更新 `users` 与 `user_roles`）。
 - [ ] 1.4 (P1): 实现 `Handler` 层的方法，处理请求绑定、响应封装及管理员权限校验逻辑。
