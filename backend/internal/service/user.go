@@ -183,40 +183,47 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 		}
 
 		// 2. 更新角色
-		if err := s.userRepo.UpdateRoles(txCtx, user.ID, req.RoleIDs); err != nil {
-			return err
+		if req.RoleIDs != nil {
+			if err := s.userRepo.UpdateRoles(txCtx, user.ID, *req.RoleIDs); err != nil {
+				return err
+			}
 		}
 
 		// 3. 联动更新医生档案
-		doctor, err := s.doctorRepo.GetByUserID(txCtx, user.ID)
-		if err != nil {
-			return err
-		}
+		if req.IsDoctor != nil {
+			doctor, err := s.doctorRepo.GetByUserID(txCtx, user.ID)
+			if err != nil {
+				return err
+			}
 
-		if req.IsDoctor {
-			if doctor == nil {
-				doctor = &model.Doctor{
-					UserID: &user.ID,
+			if *req.IsDoctor {
+				if doctor == nil {
+					doctor = &model.Doctor{
+						UserID: &user.ID,
+					}
 				}
-			}
-			doctor.RealName = user.RealName
-			doctor.Phone = user.Phone
-			doctor.EmployeeNo = user.EmployeeNo
-			doctor.Title = req.Title
-			doctor.Specialty = req.Specialty
-			doctor.Introduction = req.Introduction
-			if user.DepartmentID != nil {
-				doctor.DepartmentID = *user.DepartmentID
-			}
+				doctor.RealName = user.RealName
+				doctor.Phone = user.Phone
+				doctor.EmployeeNo = user.EmployeeNo
+				doctor.Title = req.Title
+				doctor.Specialty = req.Specialty
+				doctor.Introduction = req.Introduction
+				if user.DepartmentID != nil {
+					doctor.DepartmentID = *user.DepartmentID
+				}
 
-			if doctor.ID == 0 {
-				if err := s.doctorRepo.Create(txCtx, doctor); err != nil {
-					return err
+				if doctor.ID == 0 {
+					if err := s.doctorRepo.Create(txCtx, doctor); err != nil {
+						return err
+					}
+				} else {
+					if err := s.doctorRepo.Update(txCtx, doctor); err != nil {
+						return err
+					}
 				}
 			} else {
-				if err := s.doctorRepo.Update(txCtx, doctor); err != nil {
-					return err
-				}
+				// 如果传了 false，且之前是医生，则更新状态或删除，这里可以简单的把状态置为离职，或者不处理。
+				// 当前按原有逻辑省略处理
 			}
 		}
 

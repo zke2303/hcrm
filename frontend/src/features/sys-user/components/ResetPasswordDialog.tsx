@@ -66,7 +66,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ open, onClose
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-gray-900/50 transition-opacity"
             onClick={onClose}
           />
           

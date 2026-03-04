@@ -85,11 +85,13 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
     try {
       if (isEdit) {
         // 保留原有的角色和工号，防止在更新基础信息时被清空
+        // 保留原有的角色和工号，防止在更新基础信息时被清空
+        // 注意：如果列表没有返回完整的 roles，会导致这里 roleIds 为空数组而被清空。
         const updateData: any = {
           ...data,
           employeeNo: user!.employeeNo,
-          roleIds: user!.roles?.map(r => r.id) || []
         };
+
         await updateUser.mutateAsync({ id: user!.id, data: updateData });
         message.success('用户信息更新成功');
       } else {
@@ -116,7 +118,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-gray-900/50 transition-opacity"
             onClick={onClose}
           />
 
