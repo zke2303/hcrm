@@ -84,9 +84,10 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const onSubmit = async (data: UserFormData) => {
     try {
       if (isEdit) {
-        // 保留原有的角色，防止在更新基础信息时被清空
+        // 保留原有的角色和工号，防止在更新基础信息时被清空
         const updateData: any = {
           ...data,
+          employeeNo: user!.employeeNo,
           roleIds: user!.roles?.map(r => r.id) || []
         };
         await updateUser.mutateAsync({ id: user!.id, data: updateData });
