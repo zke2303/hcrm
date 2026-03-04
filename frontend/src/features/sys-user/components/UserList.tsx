@@ -96,7 +96,7 @@ const UserList: React.FC = () => {
   return (
     <div className="m-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xs font-bold text-gray-900">用户管理</h1>
+        <h1 className="text-lg font-bold text-gray-900">用户管理</h1>
         <button 
           onClick={handleAdd}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -119,10 +119,11 @@ const UserList: React.FC = () => {
           <table className="w-full text-center border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">工号</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">账号/姓名</th>
+                <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">角色分配</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">科室部门</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">手机号</th>
-                <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">角色分配</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">账号状态</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center">最后登录</th>
                 <th className="px-4 py-3 text-sm font-medium text-gray-600 text-center w-56">操作</th>
@@ -131,7 +132,7 @@ const UserList: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {isError ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center text-red-600 text-sm">
+                  <td colSpan={8} className="px-6 py-20 text-center text-red-600 text-sm">
                     数据加载失败，请检查网络或刷新重试。
                     <div className="mt-4">
                       <button onClick={() => setParams({...params})} className="text-blue-600 hover:text-blue-800 underline">重试</button>
@@ -140,7 +141,7 @@ const UserList: React.FC = () => {
                 </tr>
               ) : resp?.data?.list?.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center text-gray-500 text-sm">
+                  <td colSpan={8} className="px-6 py-20 text-center text-gray-500 text-sm">
                     暂无相关用户数据
                   </td>
                 </tr>

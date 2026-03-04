@@ -74,4 +74,5 @@ var (
 	ErrDepartmentNotFound = NewError(11040, "所属科室不存在")
 	ErrInvalidPassword    = NewError(11050, "密码不合法")
 	ErrSelfAction         = NewError(11060, "不能对自己进行此项操作")
+	ErrAdminDelete        = NewError(11070, "系统内置管理员账号禁止删除")
 )

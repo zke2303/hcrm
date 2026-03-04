@@ -19,14 +19,15 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onDelete, 
   onRoleManage 
 }) => {
+  const isAdmin = user.username === 'admin' || user.id === 1;
+
   return (
     <tr className="hover:bg-gray-50 border-b border-gray-200">
+      <td className="px-4 py-3 text-sm text-gray-700 text-center">{user.employeeNo || '-'}</td>
       <td className="px-4 py-3 text-sm text-gray-900 text-center">
         <div className="font-medium text-gray-900">{user.username}</div>
         <div className="text-gray-500 text-xs mt-0.5">{user.realName}</div>
       </td>
-      <td className="px-4 py-3 text-sm text-gray-700 text-center">{user.departmentName || '-'}</td>
-      <td className="px-4 py-3 text-sm text-gray-700 text-center">{user.phone || '-'}</td>
       <td className="px-4 py-3 text-sm text-center">
         <button 
           onClick={() => onRoleManage(user)}
@@ -35,14 +36,18 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
           {user.roles && user.roles.length > 0 ? user.roles.map(r => r.name).join(', ') : '设置角色'}
         </button>
       </td>
+      <td className="px-4 py-3 text-sm text-gray-700 text-center">{user.departmentName || '-'}</td>
+      <td className="px-4 py-3 text-sm text-gray-700 text-center">{user.phone || '-'}</td>
       <td className="px-4 py-3 text-sm text-center">
         <button
+          disabled={isAdmin}
           onClick={() => onStatusToggle(user)}
-          className={`px-4 py-1.5 rounded-md text-xs font-medium border ${
+          className={`px-4 py-1.5 rounded-md text-xs font-medium border transition-colors ${
             user.status === 1 
-              ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
-              : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-          }`}
+              ? 'bg-green-50 text-green-700 border-green-200' + (isAdmin ? '' : ' hover:bg-green-100')
+              : 'bg-red-50 text-red-700 border-red-200' + (isAdmin ? '' : ' hover:bg-red-100')
+          } ${isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
+          title={isAdmin ? "内置管理员禁止禁用" : ""}
         >
           {user.status === 1 ? '正常' : '禁用'}
         </button>
@@ -74,9 +79,12 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
             <KeyRound size={16} />
           </button>
           <button 
+            disabled={isAdmin}
             onClick={() => onDelete(user.id)}
-            className="text-red-600 hover:text-red-800 flex items-center justify-center gap-1"
-            title="删除"
+            className={`flex items-center justify-center gap-1 transition-colors ${
+              isAdmin ? 'text-gray-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800'
+            }`}
+            title={isAdmin ? "系统管理员禁止删除" : "删除"}
           >
             <Trash2 size={16} />
           </button>

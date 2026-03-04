@@ -108,6 +108,21 @@ func (m *MockUserRepository) FindAllRoles(ctx context.Context) ([]model.Role, er
 	return args.Get(0).([]model.Role), args.Error(1)
 }
 
+func (m *MockUserRepository) GetMaxEmployeeNo(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockUserRepository) ChangePassword(ctx context.Context, userID uint, passwordHash string) error {
+	args := m.Called(ctx, userID, passwordHash)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) ClearMustChangePassword(ctx context.Context, userID uint) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 // MockDoctorRepository 医生仓储 Mock
 type MockDoctorRepository struct {
 	mock.Mock
@@ -154,11 +169,25 @@ func (m *MockDepartmentRepository) ListByIDs(ctx context.Context, ids []uint) (m
 	return args.Get(0).(map[uint]*model.Department), args.Error(1)
 }
 
+// MockTitleRepository 职称仓储 Mock
+type MockTitleRepository struct {
+	mock.Mock
+}
+
+func (m *MockTitleRepository) FindAll(ctx context.Context) ([]*model.Title, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*model.Title), args.Error(1)
+}
+
 func TestUserService_Create(t *testing.T) {
 	userRepo := new(MockUserRepository)
 	doctorRepo := new(MockDoctorRepository)
 	deptRepo := new(MockDepartmentRepository)
-	svc := NewUserService(userRepo, doctorRepo, deptRepo)
+	titleRepo := new(MockTitleRepository)
+	svc := NewUserService(userRepo, doctorRepo, deptRepo, titleRepo)
 
 	ctx := context.Background()
 	req := &dto.CreateUserRequest{
