@@ -44,3 +44,11 @@ frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/.eslintcache
 frontend/.vite
+
+
+
+# ########################################################
+# open-code
+# ########################################################
+tasks/**
+.opencode/**
