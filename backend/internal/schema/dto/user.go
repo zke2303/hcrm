@@ -3,7 +3,6 @@ package dto
 // CreateUserRequest 创建用户请求
 type CreateUserRequest struct {
 	Username     string `json:"username" binding:"required,min=4,max=32"`
-	Password     string `json:"password" binding:"required,min=6,max=32"`
 	RealName     string `json:"realName" binding:"required"`
 	Phone        string `json:"phone" binding:"required,len=11"`
 	Email        string `json:"email" binding:"omitempty,email"`
@@ -40,11 +39,13 @@ type UpdateUserRequest struct {
 // ListUserRequest 用户列表查询请求
 type ListUserRequest struct {
 	PaginationRequest
+	Keyword      string `form:"keyword"`
 	Username     string `form:"username"`
 	RealName     string `form:"realName"`
 	Phone        string `form:"phone"`
 	DepartmentID *uint  `form:"departmentId"`
 	Status       *int8  `form:"status"`
+	Title        string `form:"title"`
 }
 
 // UpdateUserStatusRequest 更新用户状态请求
@@ -55,4 +56,10 @@ type UpdateUserStatusRequest struct {
 // ResetUserPasswordRequest 重置用户密码请求
 type ResetUserPasswordRequest struct {
 	Password string `json:"password" binding:"required,min=6,max=32"`
+}
+
+// ChangePasswordRequest 修改密码请求
+type ChangePasswordRequest struct {
+	OldPassword string `json:"oldPassword" binding:"required,min=6,max=32"`
+	NewPassword string `json:"newPassword" binding:"required,min=6,max=32"`
 }

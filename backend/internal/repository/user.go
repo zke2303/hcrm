@@ -27,6 +27,9 @@ type UserRepository interface {
 	GetDoctorByUserID(ctx context.Context, userID uint) (*model.Doctor, error)
 	UpdateLastLogin(ctx context.Context, userID uint, ip string) error
 	FindAllRoles(ctx context.Context) ([]model.Role, error)
+	GetMaxEmployeeNo(ctx context.Context) (string, error)
+	ChangePassword(ctx context.Context, userID uint, passwordHash string) error
+	ClearMustChangePassword(ctx context.Context, userID uint) error
 }
 
 type txKey struct{}
@@ -86,6 +89,16 @@ func (r *userRepository) List(ctx context.Context, req *dto.ListUserRequest) ([]
 	var total int64
 	query := r.db(ctx).Model(&model.User{})
 
+	if req.Keyword != "" {
+		k := "%" + req.Keyword + "%"
+		query = query.Where(
+			r.gormDB.Where("username LIKE ?", k).
+				Or("real_name LIKE ?", k).
+				Or("phone LIKE ?", k).
+				Or("employee_no LIKE ?", k).
+				Or("remark LIKE ?", k),
+		)
+	}
 	if req.Username != "" {
 		query = query.Where("username LIKE ?", "%"+req.Username+"%")
 	}
@@ -99,7 +112,11 @@ func (r *userRepository) List(ctx context.Context, req *dto.ListUserRequest) ([]
 		query = query.Where("department_id = ?", *req.DepartmentID)
 	}
 	if req.Status != nil {
-		query = query.Where("status = ?", *req.Status)
+		query = query.Where("users.status = ?", *req.Status)
+	}
+	if req.Title != "" {
+		query = query.Joins("JOIN doctors ON users.id = doctors.user_id").
+			Where("doctors.title = ?", req.Title)
 	}
 
 	err := query.Count(&total).Error
@@ -108,7 +125,7 @@ func (r *userRepository) List(ctx context.Context, req *dto.ListUserRequest) ([]
 	}
 
 	offset := (req.Page - 1) * req.PageSize
-	err = query.Offset(offset).Limit(req.PageSize).Order("id DESC").Find(&users).Error
+	err = query.Offset(offset).Limit(req.PageSize).Order("users.id DESC").Find(&users).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -218,4 +235,32 @@ func (r *userRepository) FindAllRoles(ctx context.Context) ([]model.Role, error)
 	var roles []model.Role
 	err := r.db(ctx).Order("id ASC").Find(&roles).Error
 	return roles, err
+}
+
+// GetMaxEmployeeNo
+// Returns empty string if no employee exists
+func (r *userRepository) GetMaxEmployeeNo(ctx context.Context) (string, error) {
+	var employeeNo string
+	err := r.db(ctx).Model(&model.User{}).
+		Where("employee_no LIKE ?", "EMP%").
+		Order("employee_no DESC").
+		Limit(1).
+		Pluck("employee_no", &employeeNo).Error
+	if err == gorm.ErrRecordNotFound {
+		return "", nil
+	}
+	return employeeNo, err
+}
+
+// ChangePassword updates user password and clears must_change_password flag
+func (r *userRepository) ChangePassword(ctx context.Context, userID uint, passwordHash string) error {
+	return r.db(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
+		"password_hash":        passwordHash,
+		"must_change_password": false,
+	}).Error
+}
+
+// ClearMustChangePassword clears the must_change_password flag for a user
+func (r *userRepository) ClearMustChangePassword(ctx context.Context, userID uint) error {
+	return r.db(ctx).Model(&model.User{}).Where("id = ?", userID).Update("must_change_password", false).Error
 }

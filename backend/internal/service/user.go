@@ -2,10 +2,14 @@ package service
 
 import (
 	"context"
+	"errors" // standard library errors
+	"fmt"
+	"strconv"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 
-	"hcrm/backend/internal/errors"
+	apperrors "hcrm/backend/internal/errors"
 	"hcrm/backend/internal/model"
 	"hcrm/backend/internal/repository"
 	"hcrm/backend/internal/schema/converter"
@@ -15,13 +19,14 @@ import (
 
 // UserService 用户服务接口
 type UserService interface {
-	Create(ctx context.Context, req *dto.CreateUserRequest) error
+	Create(ctx context.Context, req *dto.CreateUserRequest) (*vo.CreateUserResponse, error)
 	Update(ctx context.Context, id uint, req *dto.UpdateUserRequest) error
 	Delete(ctx context.Context, id uint) error
 	GetByID(ctx context.Context, id uint) (*vo.UserVO, error)
 	List(ctx context.Context, req *dto.ListUserRequest) (*vo.PageResponse, error)
 	UpdateStatus(ctx context.Context, id uint, status int8) error
 	ResetPassword(ctx context.Context, id uint, password string) error
+	ChangePassword(ctx context.Context, userID uint, req *dto.ChangePasswordRequest) error
 	ListRoles(ctx context.Context) ([]*vo.RoleVO, error)
 	ListTitles(ctx context.Context) ([]*vo.TitleVO, error)
 }
@@ -48,43 +53,51 @@ func NewUserService(
 	}
 }
 
-func (s *userService) Create(ctx context.Context, req *dto.CreateUserRequest) error {
+func (s *userService) Create(ctx context.Context, req *dto.CreateUserRequest) (*vo.CreateUserResponse, error) {
 	// 校验账号是否已存在
 	if _, err := s.userRepo.GetByUsername(ctx, req.Username); err == nil {
-		return errors.ErrUserExists
+		return nil, apperrors.ErrUserExists
 	}
 
 	// 校验手机号是否已存在
 	if _, err := s.userRepo.GetByPhone(ctx, req.Phone); err == nil {
-		return errors.ErrPhoneExists
+		return nil, apperrors.ErrPhoneExists
 	}
 
 	// 校验科室是否存在
 	if req.DepartmentID != nil {
 		if _, err := s.deptRepo.GetByID(ctx, *req.DepartmentID); err != nil {
-			return errors.ErrDepartmentNotFound
+			return nil, apperrors.ErrDepartmentNotFound
 		}
 	}
 
-	// 密码哈希
-	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	// 自动生成工号（EMP + 5位数字）
+	employeeNo, err := s.generateEmployeeNo(ctx)
 	if err != nil {
-		return errors.ErrInternal.WithError(err)
+		return nil, apperrors.ErrInternal.WithError(err)
+	}
+
+	// 使用默认密码
+	const defaultPassword = "123456"
+	hashed, err := bcrypt.GenerateFromPassword([]byte(defaultPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, apperrors.ErrInternal.WithError(err)
 	}
 
 	user := &model.User{
-		Username:     req.Username,
-		PasswordHash: string(hashed),
-		RealName:     req.RealName,
-		Phone:        req.Phone,
-		Email:        req.Email,
-		EmployeeNo:   req.EmployeeNo,
-		DepartmentID: req.DepartmentID,
-		Remark:       req.Remark,
-		Status:       1,
+		Username:           req.Username,
+		PasswordHash:       string(hashed),
+		RealName:           req.RealName,
+		Phone:              req.Phone,
+		Email:              req.Email,
+		EmployeeNo:         employeeNo,
+		DepartmentID:       req.DepartmentID,
+		Remark:             req.Remark,
+		Status:             1,
+		MustChangePassword: true,
 	}
 
-	return s.userRepo.Transaction(ctx, func(txCtx context.Context) error {
+	err = s.userRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 1. 创建用户
 		if err := s.userRepo.Create(txCtx, user); err != nil {
 			return err
@@ -120,25 +133,35 @@ func (s *userService) Create(ctx context.Context, req *dto.CreateUserRequest) er
 
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &vo.CreateUserResponse{
+		ID:              user.ID,
+		Username:        user.Username,
+		EmployeeNo:      employeeNo,
+		DefaultPassword: defaultPassword,
+	}, nil
 }
 
 func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRequest) error {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return errors.ErrUserNotFound
+		return apperrors.ErrUserNotFound
 	}
 
 	// 校验手机号冲突
 	if user.Phone != req.Phone {
 		if _, err := s.userRepo.GetByPhone(ctx, req.Phone); err == nil {
-			return errors.ErrPhoneExists
+			return apperrors.ErrPhoneExists
 		}
 	}
 
 	// 校验科室
 	if req.DepartmentID != nil {
 		if _, err := s.deptRepo.GetByID(ctx, *req.DepartmentID); err != nil {
-			return errors.ErrDepartmentNotFound
+			return apperrors.ErrDepartmentNotFound
 		}
 	}
 
@@ -201,9 +224,13 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 }
 
 func (s *userService) Delete(ctx context.Context, id uint) error {
-	_, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return errors.ErrUserNotFound
+		return apperrors.ErrUserNotFound
+	}
+	// 禁止删除内置管理员
+	if user.ID == 1 || user.Username == "admin" {
+		return apperrors.ErrAdminDelete
 	}
 	return s.userRepo.Delete(ctx, id)
 }
@@ -211,7 +238,7 @@ func (s *userService) Delete(ctx context.Context, id uint) error {
 func (s *userService) GetByID(ctx context.Context, id uint) (*vo.UserVO, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, errors.ErrUserNotFound
+		return nil, apperrors.ErrUserNotFound
 	}
 
 	var dept *model.Department
@@ -228,7 +255,7 @@ func (s *userService) GetByID(ctx context.Context, id uint) (*vo.UserVO, error) 
 func (s *userService) List(ctx context.Context, req *dto.ListUserRequest) (*vo.PageResponse, error) {
 	users, total, err := s.userRepo.List(ctx, req)
 	if err != nil {
-		return nil, errors.ErrDatabase.WithError(err)
+		return nil, apperrors.ErrDatabase.WithError(err)
 	}
 
 	// 批量获取科室名称
@@ -247,9 +274,13 @@ func (s *userService) List(ctx context.Context, req *dto.ListUserRequest) (*vo.P
 }
 
 func (s *userService) UpdateStatus(ctx context.Context, id uint, status int8) error {
-	_, err := s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return errors.ErrUserNotFound
+		return apperrors.ErrUserNotFound
+	}
+	// 禁止禁用内置管理员
+	if (user.ID == 1 || user.Username == "admin") && status == 0 {
+		return apperrors.ErrAdminDelete.WithMessage("系统内置管理员账号禁止禁用")
 	}
 	return s.userRepo.UpdateStatus(ctx, id, status)
 }
@@ -257,12 +288,12 @@ func (s *userService) UpdateStatus(ctx context.Context, id uint, status int8) er
 func (s *userService) ResetPassword(ctx context.Context, id uint, password string) error {
 	_, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return errors.ErrUserNotFound
+		return apperrors.ErrUserNotFound
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.ErrInternal.WithError(err)
+		return apperrors.ErrInternal.WithError(err)
 	}
 
 	return s.userRepo.ResetPassword(ctx, id, string(hashed))
@@ -271,7 +302,7 @@ func (s *userService) ResetPassword(ctx context.Context, id uint, password strin
 func (s *userService) ListRoles(ctx context.Context) ([]*vo.RoleVO, error) {
 	roles, err := s.userRepo.FindAllRoles(ctx)
 	if err != nil {
-		return nil, errors.ErrDatabase.WithError(err)
+		return nil, apperrors.ErrDatabase.WithError(err)
 	}
 
 	return converter.RoleListToVO(roles), nil
@@ -280,7 +311,7 @@ func (s *userService) ListRoles(ctx context.Context) ([]*vo.RoleVO, error) {
 func (s *userService) ListTitles(ctx context.Context) ([]*vo.TitleVO, error) {
 	titles, err := s.titleRepo.FindAll(ctx)
 	if err != nil {
-		return nil, errors.ErrDatabase.WithError(err)
+		return nil, apperrors.ErrDatabase.WithError(err)
 	}
 
 	res := make([]*vo.TitleVO, len(titles))
@@ -293,3 +324,50 @@ func (s *userService) ListTitles(ctx context.Context) ([]*vo.TitleVO, error) {
 	}
 	return res, nil
 }
+
+// generateEmployeeNo generates a new employee number with format EMP + 5 digits
+func (s *userService) generateEmployeeNo(ctx context.Context) (string, error) {
+	maxNo, err := s.userRepo.GetMaxEmployeeNo(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	nextNum := 1
+	if maxNo != "" {
+		// Extract the numeric part from the max employee number
+		numStr := strings.TrimPrefix(maxNo, "EMP")
+		if num, err := strconv.Atoi(numStr); err == nil {
+			nextNum = num + 1
+		}
+	}
+
+	// Format: EMP + 5 digits (e.g., EMP00001, EMP00002)
+	return fmt.Sprintf("EMP%05d", nextNum), nil
+}
+
+// ChangePassword allows user to change their own password
+func (s *userService) ChangePassword(ctx context.Context, userID uint, req *dto.ChangePasswordRequest) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return apperrors.ErrUserNotFound
+	}
+
+	// Verify old password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.OldPassword)); err != nil {
+		return errors.New("原密码错误")
+	}
+
+	// Validate new password is different from old password
+	if req.OldPassword == req.NewPassword {
+		return errors.New("新密码不能与原密码相同")
+	}
+
+	// Hash new password
+	hashed, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return apperrors.ErrInternal.WithError(err)
+	}
+
+	return s.userRepo.ChangePassword(ctx, userID, string(hashed))
+}
+

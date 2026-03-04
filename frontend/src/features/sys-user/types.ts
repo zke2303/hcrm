@@ -34,11 +34,9 @@ export interface Title {
 
 export interface CreateUserRequest {
   username: string;
-  password?: string;
   realName: string;
   phone: string;
   email?: string;
-  employeeNo?: string;
   departmentId?: number;
   remark?: string;
   roleIds?: number[];
@@ -66,11 +64,13 @@ export interface UpdateUserRequest {
 export interface UserListParams {
   page: number;
   pageSize: number;
+  keyword?: string;
   username?: string;
   realName?: string;
   phone?: string;
   departmentId?: number;
   status?: number;
+  title?: string;
 }
 
 export interface UserListResponse {
@@ -82,4 +82,12 @@ export interface ApiResponse<T> {
   code: number;
   message: string;
   data: T;
+}
+
+// 创建用户响应
+export interface CreateUserResponse {
+  id: number;
+  username: string;
+  employeeNo: string;
+  defaultPassword: string;
 }

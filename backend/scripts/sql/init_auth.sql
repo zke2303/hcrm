@@ -45,6 +45,7 @@ CREATE TABLE `users`  (
   `last_login_at` datetime(0) NULL DEFAULT NULL COMMENT '最后登录时间',
   `last_login_ip` varchar(40) NULL DEFAULT NULL COMMENT '最后登录IP',
   `creator_id` bigint(20) NULL DEFAULT NULL COMMENT '创建人ID',
+  `must_change_password` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否需要修改密码：0-否，1-是',
   `created_at` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
   `updated_at` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
   `deleted_at` datetime(0) NULL DEFAULT NULL COMMENT '软删除时间',

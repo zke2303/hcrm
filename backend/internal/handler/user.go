@@ -28,7 +28,8 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
-	if err := h.userSvc.Create(c.Request.Context(), &req); err != nil {
+	resp, err := h.userSvc.Create(c.Request.Context(), &req)
+	if err != nil {
 		if e, ok := err.(*errors.Error); ok {
 			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
 		} else {
@@ -37,9 +38,8 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
-	Success(c, nil)
+	Success(c, resp)
 }
-
 // Update 更新用户
 func (h *UserHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
@@ -215,6 +215,32 @@ func (h *UserHandler) ListTitles(c *gin.Context) {
 	Success(c, titles)
 }
 
+// ChangePassword 用户修改密码
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		Fail(c, 40101, "未登录")
+		return
+	}
+
+	var req dto.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		return
+	}
+
+	if err := h.userSvc.ChangePassword(c.Request.Context(), userID.(uint), &req); err != nil {
+		if e, ok := err.(*errors.Error); ok {
+			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
+		} else {
+			Fail(c, errors.ErrInternal.Code, err.Error())
+		}
+		return
+	}
+
+	Success(c, nil)
+}
+
 // RegisterUserRoutes 注册用户模块路由
 func RegisterUserRoutes(r *gin.RouterGroup, h *UserHandler) {
 	users := r.Group("/v1/users")
@@ -228,5 +254,6 @@ func RegisterUserRoutes(r *gin.RouterGroup, h *UserHandler) {
 		users.DELETE("/:id", h.Delete)
 		users.PUT("/:id/status", h.UpdateStatus)
 		users.PUT("/:id/password", h.ResetPassword)
+		users.PUT("/me/password", h.ChangePassword)
 	}
 }

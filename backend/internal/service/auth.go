@@ -138,13 +138,14 @@ func (s *authService) Login(ctx context.Context, req *vo.LoginRequest, ip string
 		AccessToken:  token,
 		RefreshToken: refresh,
 		User: vo.UserInfo{
-			ID:           user.ID,
-			Username:     user.Username,
-			RealName:     user.RealName,
-			Phone:        user.Phone,
-			Roles:        roles,
-			Permissions:  permissions,
-			DepartmentID: user.DepartmentID,
+			ID:                user.ID,
+			Username:          user.Username,
+			RealName:          user.RealName,
+			Phone:             user.Phone,
+			Roles:             roles,
+			Permissions:       permissions,
+			DepartmentID:      user.DepartmentID,
+			MustChangePassword: user.MustChangePassword,
 		},
 	}
 

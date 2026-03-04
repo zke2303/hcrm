@@ -5,10 +5,12 @@ interface User {
   id: number;
   username: string;
   realName: string;
+  phone: string;
   roles: string[];
   permissions: string[];
   doctorId?: number;
   departmentId?: number;
+  mustChangePassword: boolean;
 }
 
 interface AuthState {

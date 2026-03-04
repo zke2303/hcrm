@@ -15,14 +15,15 @@ type LoginResponse struct {
 
 // UserInfo 登录成功返回的用户信息
 type UserInfo struct {
-	ID           uint     `json:"id"`
-	Username     string   `json:"username"`
-	RealName     string   `json:"realName"`
-	Phone        string   `json:"phone"`
-	Roles        []string `json:"roles"`
-	Permissions  []string `json:"permissions"`
-	DoctorID     *uint    `json:"doctorId,omitempty"`
-	DepartmentID *uint    `json:"departmentId,omitempty"`
+	ID                uint     `json:"id"`
+	Username          string   `json:"username"`
+	RealName          string   `json:"realName"`
+	Phone             string   `json:"phone"`
+	Roles             []string `json:"roles"`
+	Permissions       []string `json:"permissions"`
+	DoctorID          *uint    `json:"doctorId,omitempty"`
+	DepartmentID      *uint    `json:"departmentId,omitempty"`
+	MustChangePassword bool    `json:"mustChangePassword"`
 }
 
 // TokenRefreshResponse 令牌刷新响应

@@ -19,6 +19,7 @@ type User struct {
 	LastLoginAt  *time.Time `json:"lastLoginAt"`
 	LastLoginIP  string     `gorm:"size:40;comment:最后登录IP" json:"lastLoginIp"`
 	CreatorID    *uint      `json:"creatorId"`
+	MustChangePassword bool `gorm:"not null;default:true;comment:是否需要修改密码" json:"mustChangePassword"`
 }
 
 func (User) TableName() string {

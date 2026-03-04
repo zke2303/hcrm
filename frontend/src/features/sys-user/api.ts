@@ -20,9 +20,8 @@ export const userApi = {
     axios.get<any, ApiResponse<User>>(`/v1/users/${id}`),
 
   // 创建用户
-  create: (data: CreateUserRequest) => 
-    axios.post<any, ApiResponse<void>>('/v1/users', data),
-
+  create: (data: CreateUserRequest) =>
+    axios.post<any, ApiResponse<any>>('/v1/users', data),
   // 更新用户
   update: (id: number, data: UpdateUserRequest) => 
     axios.put<any, ApiResponse<void>>(`/v1/users/${id}`, data),
