@@ -46,6 +46,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		// 处理器层
 		handler.NewHealthHandler,
 		handler.NewAuthHandler,
+		handler.NewUserHandler,
 		// 应用
 		app.New,
 	)
