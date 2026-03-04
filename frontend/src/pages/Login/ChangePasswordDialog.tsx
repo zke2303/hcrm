@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useMessage } from '@/components/common/MessageContext';
 import { useAuthStore } from '@/store/useAuthStore';
-import axios from 'axios';
+import axiosInstance from '@/api/axios';
 
 const ChangePasswordSchema = z.object({
   oldPassword: z.string().min(6, '原密码至少6个字符'),
@@ -60,7 +60,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-      await axios.put('/api/v1/users/me/password', {
+      await axiosInstance.put('/v1/users/me/password', {
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
       });
