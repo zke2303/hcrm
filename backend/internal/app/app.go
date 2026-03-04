@@ -14,6 +14,7 @@ import (
 	"hcrm/backend/internal/config"
 	"hcrm/backend/internal/handler"
 	"hcrm/backend/internal/middleware"
+	"hcrm/backend/internal/pkg/auth"
 )
 
 // App 应用结构
@@ -28,6 +29,10 @@ type App struct {
 	// Handlers
 	healthHandler *handler.HealthHandler
 	authHandler   *handler.AuthHandler
+	userHandler   *handler.UserHandler
+
+	// Middleware components
+	jwt *auth.JWTHelper
 }
 
 // New 创建应用实例
@@ -38,6 +43,8 @@ func New(
 	redis *redis.Client,
 	healthHandler *handler.HealthHandler,
 	authHandler *handler.AuthHandler,
+	userHandler *handler.UserHandler,
+	jwt *auth.JWTHelper,
 ) *App {
 	// 设置 Gin 模式
 	gin.SetMode(cfg.Server.Mode)
@@ -53,6 +60,8 @@ func New(
 		redis:         redis,
 		healthHandler: healthHandler,
 		authHandler:   authHandler,
+		userHandler:   userHandler,
+		jwt:           jwt,
 	}
 
 	// 注册全局中间件
@@ -83,11 +92,11 @@ func (a *App) registerRoutes() {
 	}
 
 	// 受保护路由组（需要认证）
-	// protected := a.router.Group("/api")
-	// protected.Use(middleware.Auth())
-	// {
-	//     // 在此添加受保护的路由
-	// }
+	protected := a.router.Group("/api")
+	protected.Use(middleware.Auth(a.jwt))
+	{
+		handler.RegisterUserRoutes(protected, a.userHandler)
+	}
 }
 
 // Run 启动应用

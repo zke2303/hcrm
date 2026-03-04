@@ -52,7 +52,11 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 	jwtHelper := auth.NewJWTHelper(jwtConfig)
 	authService := service.NewAuthService(userRepository, operationLogRepository, loginRateLimiter, jwtHelper, client)
 	authHandler := handler.NewAuthHandler(authService)
-	appApp := app.New(config, zapLogger, db, client, healthHandler, authHandler)
+	doctorRepository := repository.NewDoctorRepository(db)
+	departmentRepository := repository.NewDepartmentRepository(db)
+	userService := service.NewUserService(userRepository, doctorRepository, departmentRepository)
+	userHandler := handler.NewUserHandler(userService)
+	appApp := app.New(config, zapLogger, db, client, healthHandler, authHandler, userHandler, jwtHelper)
 	return appApp, func() {
 		cleanup2()
 		cleanup()
