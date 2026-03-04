@@ -29,6 +29,7 @@ type UserService interface {
 	ChangePassword(ctx context.Context, userID uint, req *dto.ChangePasswordRequest) error
 	ListRoles(ctx context.Context) ([]*vo.RoleVO, error)
 	ListTitles(ctx context.Context) ([]*vo.TitleVO, error)
+	ListDepartments(ctx context.Context) ([]*vo.DepartmentVO, error)
 }
 
 type userService struct {
@@ -325,6 +326,22 @@ func (s *userService) ListTitles(ctx context.Context) ([]*vo.TitleVO, error) {
 	return res, nil
 }
 
+func (s *userService) ListDepartments(ctx context.Context) ([]*vo.DepartmentVO, error) {
+	depts, err := s.deptRepo.FindAll(ctx)
+	if err != nil {
+		return nil, apperrors.ErrDatabase.WithError(err)
+	}
+
+	res := make([]*vo.DepartmentVO, len(depts))
+	for i, d := range depts {
+		res[i] = &vo.DepartmentVO{
+			ID:   d.ID,
+			Name: d.Name,
+		}
+	}
+	return res, nil
+}
+
 // generateEmployeeNo generates a new employee number with format EMP + 5 digits
 func (s *userService) generateEmployeeNo(ctx context.Context) (string, error) {
 	maxNo, err := s.userRepo.GetMaxEmployeeNo(ctx)
@@ -370,4 +387,3 @@ func (s *userService) ChangePassword(ctx context.Context, userID uint, req *dto.
 
 	return s.userRepo.ChangePassword(ctx, userID, string(hashed))
 }
-

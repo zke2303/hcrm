@@ -169,6 +169,14 @@ func (m *MockDepartmentRepository) ListByIDs(ctx context.Context, ids []uint) (m
 	return args.Get(0).(map[uint]*model.Department), args.Error(1)
 }
 
+func (m *MockDepartmentRepository) FindAll(ctx context.Context) ([]*model.Department, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*model.Department), args.Error(1)
+}
+
 // MockTitleRepository 职称仓储 Mock
 type MockTitleRepository struct {
 	mock.Mock
@@ -192,7 +200,6 @@ func TestUserService_Create(t *testing.T) {
 	ctx := context.Background()
 	req := &dto.CreateUserRequest{
 		Username: "testuser",
-		Password: "password123",
 		RealName: "Test User",
 		Phone:    "13800138000",
 	}

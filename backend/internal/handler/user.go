@@ -40,6 +40,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 
 	Success(c, resp)
 }
+
 // Update 更新用户
 func (h *UserHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
@@ -215,6 +216,21 @@ func (h *UserHandler) ListTitles(c *gin.Context) {
 	Success(c, titles)
 }
 
+// ListDepartments 获取所有科室列表
+func (h *UserHandler) ListDepartments(c *gin.Context) {
+	depts, err := h.userSvc.ListDepartments(c.Request.Context())
+	if err != nil {
+		if e, ok := err.(*errors.Error); ok {
+			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
+		} else {
+			Fail(c, errors.ErrInternal.Code, err.Error())
+		}
+		return
+	}
+
+	Success(c, depts)
+}
+
 // ChangePassword 用户修改密码
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	userID, exists := c.Get("userID")
@@ -248,6 +264,7 @@ func RegisterUserRoutes(r *gin.RouterGroup, h *UserHandler) {
 		users.GET("", h.List)
 		users.GET("/roles", h.ListRoles)
 		users.GET("/titles", h.ListTitles)
+		users.GET("/departments", h.ListDepartments)
 		users.POST("", h.Create)
 		users.GET("/:id", h.GetByID)
 		users.PUT("/:id", h.Update)

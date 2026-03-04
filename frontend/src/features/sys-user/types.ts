@@ -32,6 +32,11 @@ export interface Title {
   sortOrder?: number;
 }
 
+export interface Department {
+  id: number;
+  name: string;
+}
+
 export interface CreateUserRequest {
   username: string;
   realName: string;

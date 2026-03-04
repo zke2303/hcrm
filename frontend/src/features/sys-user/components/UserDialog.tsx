@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useMessage } from '@/components/common/MessageContext';
-import { useCreateUser, useTitles, useUpdateUser } from '../hooks/useUsers';
+import { useCreateUser, useDepartments, useTitles, useUpdateUser } from '../hooks/useUsers';
 import type { User as UserType } from '../types';
 
 const userSchema = z.object({
@@ -35,6 +35,8 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const message = useMessage();
   const { data: titlesResp } = useTitles();
   const titles = titlesResp?.data || [];
+  const { data: deptsResp } = useDepartments();
+  const departments = deptsResp?.data || [];
 
   const {
     register,
@@ -82,7 +84,12 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const onSubmit = async (data: UserFormData) => {
     try {
       if (isEdit) {
-        await updateUser.mutateAsync({ id: user!.id, data });
+        // 保留原有的角色，防止在更新基础信息时被清空
+        const updateData: any = {
+          ...data,
+          roleIds: user!.roles?.map(r => r.id) || []
+        };
+        await updateUser.mutateAsync({ id: user!.id, data: updateData });
         message.success('用户信息更新成功');
       } else {
         const resp = await createUser.mutateAsync(data as any);
@@ -161,6 +168,20 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
                 {/* 基本资料 Divider */}
                 <div className="col-span-1 md:col-span-2 text-base font-semibold text-gray-900 border-b border-gray-200 pb-2 mt-4">
                   基本资料
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">所属科室</label>
+                  <select
+                    {...register('departmentId', { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
+                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                  >
+                    <option value="">暂无所属科室</option>
+                    {departments.map((d: any) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                  {errors.departmentId && <p className="text-sm text-red-500">{(errors.departmentId.message as string)}</p>}
                 </div>
 
                 <div className="space-y-2">

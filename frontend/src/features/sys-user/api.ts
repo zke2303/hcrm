@@ -2,6 +2,7 @@ import axios from '../../api/axios';
 import type {
     ApiResponse,
     CreateUserRequest,
+    Department,
     Role,
     Title,
     UpdateUserRequest,
@@ -45,4 +46,8 @@ export const userApi = {
   // 获取所有职称字典
   getTitles: () =>
     axios.get<any, ApiResponse<Title[]>>('/v1/users/titles'),
+
+  // 获取所有科室字典
+  getDepartments: () =>
+    axios.get<any, ApiResponse<Department[]>>('/v1/users/departments'),
 };

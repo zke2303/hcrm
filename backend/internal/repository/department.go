@@ -12,6 +12,7 @@ import (
 type DepartmentRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.Department, error)
 	ListByIDs(ctx context.Context, ids []uint) (map[uint]*model.Department, error)
+	FindAll(ctx context.Context) ([]*model.Department, error)
 }
 
 type departmentRepository struct {
@@ -52,4 +53,13 @@ func (r *departmentRepository) ListByIDs(ctx context.Context, ids []uint) (map[u
 		res[dept.ID] = dept
 	}
 	return res, nil
+}
+
+func (r *departmentRepository) FindAll(ctx context.Context) ([]*model.Department, error) {
+	var depts []*model.Department
+	err := r.db(ctx).Order("id ASC").Find(&depts).Error
+	if err != nil {
+		return nil, err
+	}
+	return depts, nil
 }

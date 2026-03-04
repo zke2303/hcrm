@@ -71,3 +71,10 @@ export function useTitles() {
     queryFn: () => userApi.getTitles(),
   });
 }
+
+export function useDepartments() {
+  return useQuery({
+    queryKey: ['departments'],
+    queryFn: () => userApi.getDepartments(),
+  });
+}
