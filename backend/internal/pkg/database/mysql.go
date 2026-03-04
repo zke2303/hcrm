@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -72,22 +73,22 @@ func (l *GormLogger) LogMode(level logger.LogLevel) logger.Interface {
 }
 
 // Info 信息日志
-func (l *GormLogger) Info(msg string, data ...interface{}) {
+func (l *GormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	l.log.Sugar().Infof(msg, data...)
 }
 
 // Warn 警告日志
-func (l *GormLogger) Warn(msg string, data ...interface{}) {
+func (l *GormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	l.log.Sugar().Warnf(msg, data...)
 }
 
 // Error 错误日志
-func (l *GormLogger) Error(msg string, data ...interface{}) {
+func (l *GormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	l.log.Sugar().Errorf(msg, data...)
 }
 
 // Trace 追踪日志
-func (l *GormLogger) Trace(begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 

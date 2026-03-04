@@ -1,42 +1,67 @@
-#root {
-  max-width: 1280px;
+.app-main {
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  z-index: 100;
+  border-bottom: 1.5px solid rgba(0, 86, 210, 0.08);
+}
+
+.user-area {
+  gap: 20px;
+}
+
+.username {
+  font-size: 14px;
+  color: var(--color-text-sub);
+  font-weight: 500;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  gap: 6px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #FFF5F5;
+  color: var(--color-error);
+  border-color: rgba(186, 26, 26, 0.2);
+}
+
+.content {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 40px;
+}
+
+.workbench-card {
+  padding: 32px;
+  border-radius: 20px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.workbench-card h2 {
+  font-size: 28px;
+  color: var(--color-primary);
+  margin-bottom: 12px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.workbench-card p {
+  color: var(--color-text-sub);
 }

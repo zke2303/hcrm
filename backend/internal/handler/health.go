@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"hcrm/backend/internal/schema/vo"
 	"hcrm/backend/internal/service"
 )
 

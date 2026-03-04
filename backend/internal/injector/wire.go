@@ -8,6 +8,7 @@ import (
 	"hcrm/backend/internal/app"
 	"hcrm/backend/internal/config"
 	"hcrm/backend/internal/handler"
+	"hcrm/backend/internal/pkg/auth"
 	"hcrm/backend/internal/pkg/database"
 	"hcrm/backend/internal/pkg/logger"
 	"hcrm/backend/internal/repository"
@@ -20,16 +21,28 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 	wire.Build(
 		// 配置加载
 		provideConfig,
+		provideDatabaseConfig,
+		provideRedisConfig,
+		provideLogConfig,
+		provideJWTConfig,
+		// 工具
+		auth.NewJWTHelper,
+		auth.NewLoginRateLimiter,
 		// 日志
 		logger.New,
 		// 数据库
 		database.NewMySQL,
+		database.NewRedis,
 		// 仓储层
 		repository.NewHealthRepository,
+		repository.NewUserRepository,
+		repository.NewOperationLogRepository,
 		// 服务层
 		service.NewHealthService,
+		service.NewAuthService,
 		// 处理器层
 		handler.NewHealthHandler,
+		handler.NewAuthHandler,
 		// 应用
 		app.New,
 	)
@@ -39,4 +52,20 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 // provideConfig 提供配置实例
 func provideConfig(configPath string) (*config.Config, error) {
 	return config.Load(configPath)
+}
+
+func provideDatabaseConfig(cfg *config.Config) *config.DatabaseConfig {
+	return &cfg.Database
+}
+
+func provideRedisConfig(cfg *config.Config) *config.RedisConfig {
+	return &cfg.Redis
+}
+
+func provideLogConfig(cfg *config.Config) *config.LogConfig {
+	return &cfg.Log
+}
+
+func provideJWTConfig(cfg *config.Config) *config.JWTConfig {
+	return &cfg.JWT
 }

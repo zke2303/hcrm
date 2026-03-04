@@ -1,33 +1,46 @@
 ## ADDED Requirements
 
-### Requirement: 用户登录验证
+### Requirement: 深度身份验证与授权
 
-系统应通过用户名和密码验证用户身份，并返回加密的服务凭证。密码存储必须经过 bcrypt 加密处理。
+系统应验证用户身份，并返回包含权限、角色及业务绑定的完整凭证。
 
-#### Scenario: 成功登录
+#### Scenario: 成功登录 (带权限与业务绑定)
 
-- **WHEN** 用户提供正确的用户名和匹配的密码
-- **THEN** 系统返回 HTTP 200，并包含 Access Token (JWT) 及设置 HttpOnly 的 Refresh Token Cookie
+- **WHEN** 医生用户提供正确的凭据
+- **THEN** 系统返回 HTTP 200，响应体包含：
+  - Access Token (含 Roles/Permissions 声明)
+  - User 基础信息
+  - 关联的 `doctorId` 及其所属科室数据
+  - 同时设置 HttpOnly 的 Refresh Token Cookie
 
-#### Scenario: 登录失败（凭据错误）
+#### Scenario: 登录失败与锁定 (防暴破)
 
-- **WHEN** 用户提供了错误的密码或不存在的用户名
-- **THEN** 系统返回 HTTP 401 错误，提示身份验证失败
+- **WHEN** 用户连续 5 次输入错误密码
+- **THEN** 系统在第 6 次尝试时返回 HTTP 429 或 403，提示“账号已锁定，请 15 分钟后再试”，并在 Redis 中存储锁定状态
 
-### Requirement: 记住我 (Keep Logged In)
+### Requirement: 账号状态联动
 
-系统应支持长效会话，通过 Refresh Token 实现即使关闭浏览器也能在有效期内自动登录。
+系统应确保账号可用性与业务状态同步。
 
-#### Scenario: 勾选记住我后再次访问
+#### Scenario: 离职医生登录拒绝
 
-- **WHEN** 用户在登录时勾选了“记住我”，且后续 Access Token 过期但 Refresh Token 仍有效
-- **THEN** 前端自动调用刷新接口获取新的 Access Token，用户无需重新输入密码
+- **WHEN** 一个 `Doctor.Status = 0` (离职) 的用户尝试登录
+- **THEN** 即使密码正确，系统也应返回 HTTP 403，提示“账号已停用”，并自动将 `User.Status` 标记为禁用
 
-### Requirement: 忘记密码
+### Requirement: 审计日志自动化
 
-系统应提供一种找回账号访问权限的机制。
+所有认证行为必须可追溯。
 
-#### Scenario: 触发重置密码流程
+#### Scenario: 登录审计生成
 
-- **WHEN** 用户在登录页点击“忘记密码”并提交关联的电子邮箱
-- **THEN** 系统验证邮箱存在并发送包含重置凭证的通知（当前阶段模拟通知发送）
+- **WHEN** 任何登录尝试发生（无论成功或失败）
+- **THEN** 系统必须在 `operation_logs` 表中插入一条记录，包含 IP、Action(Login)、Status 及关联的 UserID（若已知）
+
+### Requirement: 动态权限 UI
+
+前端应具备基于权限的渲染能力。
+
+#### Scenario: 权限渲染校验
+
+- **WHEN** 前端收到 Permissions 数组不含 `patient:delete`
+- **THEN** 页面上的“删除病历”按钮应对该用户不可见或呈禁用状态

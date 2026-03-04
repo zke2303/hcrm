@@ -24,25 +24,18 @@ func New(cfg *config.LogConfig) (*zap.Logger, error) {
 
 	// 编码器配置
 	encoderConfig := zapcore.EncoderConfig{
-		TimeEncoder:        zapcore.ISO8601TimeEncoder,
-		LevelEncoder:       zapcore.CapitalLevelEncoder,
-		NameEncoder:        zapcore.FullNameEncoder,
-		CallerEncoder:      zapcore.ShortCallerEncoder,
-		FunctionEncoder:    zapcore.FullNameEncoder,
-		MessageKey:         "msg",
-		LevelKey:           "level",
-		TimeKey:            "time",
-		NameKey:            "logger",
-		CallerKey:          "caller",
-		FunctionKey:        zapcore.OmitKey,
-		StacktraceKey:      "stacktrace",
-		LineEnding:         zapcore.DefaultLineEnding,
-		EncodeLevel:        zapcore.CapitalLevelEncoder,
-		EncodeTime:         zapcore.ISO8601TimeEncoder,
-		EncodeDuration:     zapcore.SecondsDurationEncoder,
-		EncodeCaller:       zapcore.ShortCallerEncoder,
-		NewObjectEncoder:   nil,
-		NewReflectedEncoder: nil,
+		MessageKey:     "msg",
+		LevelKey:       "level",
+		TimeKey:        "time",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		FunctionKey:    zapcore.OmitKey,
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
 	// 核心组件

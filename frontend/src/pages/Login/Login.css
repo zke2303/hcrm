@@ -1,0 +1,130 @@
+.login-container {
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at 50% 50%, #f0f7ff 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card {
+  width: 420px;
+  padding: 40px;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-header .logo-box {
+  width: 56px;
+  height: 56px;
+  background: var(--color-primary);
+  border-radius: 14px;
+  margin: 0 auto 16px;
+  color: white;
+}
+
+.login-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.login-header p {
+  color: var(--color-text-sub);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 44px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  outline: none;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.06);
+}
+
+.input-wrapper .icon {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-sub);
+  opacity: 0.7;
+}
+
+.login-button {
+  width: 100%;
+  height: 48px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0, 86, 210, 0.2);
+}
+
+.login-button:hover {
+  background: var(--color-primary-light);
+  transform: translateY(-1px);
+}
+
+.login-button:active {
+  transform: translateY(1px);
+}
+
+.error-message {
+  background: #FFF2F2;
+  color: var(--color-error);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(186, 26, 26, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Background Animated Decors */
+.bg-blob {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  filter: blur(80px);
+  z-index: -1;
+  opacity: 0.4;
+}

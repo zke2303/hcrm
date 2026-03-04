@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -17,14 +18,16 @@ import (
 
 // App 应用结构
 type App struct {
-	router        *gin.Engine
-	config        *config.Config
-	logger        *zap.Logger
-	db            *gorm.DB
-	server        *http.Server
+	router *gin.Engine
+	config *config.Config
+	logger *zap.Logger
+	db     *gorm.DB
+	redis  *redis.Client
+	server *http.Server
 
 	// Handlers
 	healthHandler *handler.HealthHandler
+	authHandler   *handler.AuthHandler
 }
 
 // New 创建应用实例
@@ -32,7 +35,9 @@ func New(
 	cfg *config.Config,
 	log *zap.Logger,
 	db *gorm.DB,
+	redis *redis.Client,
 	healthHandler *handler.HealthHandler,
+	authHandler *handler.AuthHandler,
 ) *App {
 	// 设置 Gin 模式
 	gin.SetMode(cfg.Server.Mode)
@@ -45,7 +50,9 @@ func New(
 		config:        cfg,
 		logger:        log,
 		db:            db,
+		redis:         redis,
 		healthHandler: healthHandler,
+		authHandler:   authHandler,
 	}
 
 	// 注册全局中间件
@@ -71,6 +78,8 @@ func (a *App) registerRoutes() {
 	{
 		// 健康检查
 		handler.RegisterHealthRoutes(public, a.healthHandler)
+		// 认证
+		handler.RegisterAuthRoutes(public, a.authHandler)
 	}
 
 	// 受保护路由组（需要认证）

@@ -12,7 +12,14 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 	Log      LogConfig      `mapstructure:"log"`
+}
+
+// JWTConfig JWT 配置
+type JWTConfig struct {
+	Secret string `mapstructure:"secret"`
+	Expire int    `mapstructure:"expire"` // 过期时间（小时）
 }
 
 // ServerConfig 服务器配置
@@ -122,6 +129,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.port", 6379)
 	v.SetDefault("redis.password", "")
 	v.SetDefault("redis.db", 0)
+
+	// JWT
+	v.SetDefault("jwt.secret", "hcrm-secret-key-2026")
+	v.SetDefault("jwt.expire", 24)
 
 	// Log
 	v.SetDefault("log.level", "debug")

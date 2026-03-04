@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import './App.css';
+import AuthGuard from './components/Auth/AuthGuard';
+import { HasPermission } from './components/Auth/HasPermission';
+import MainLayout from './layouts/MainLayout';
+import Login from './pages/Login/Login';
+import { useAuthStore } from './store/useAuthStore';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const Dashboard: React.FC = () => {
+  const user = useAuthStore(state => state.user);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="workbench-card glass-effect">
+      <h2>欢迎开启高效随访工作</h2>
+      <p style={{ marginTop: 12 }}>您目前的角色是：<b>{user?.roles.join(', ')}</b></p>
+      
+      <div style={{ marginTop: 32, padding: 20, background: 'rgba(0,86,210,0.03)', borderRadius: 12 }}>
+         <p style={{ fontSize: 13, color: '#666' }}>权限指令级控制测试：</p>
+         <div style={{ marginTop: 12, display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <HasPermission permission="user:add">
+               <button className="test-btn">添加用户</button>
+            </HasPermission>
+            <HasPermission permission="patient:view">
+               <button className="test-btn">查看患者</button>
+            </HasPermission>
+         </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default App
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        
+        <Route path="/" element={
+          <AuthGuard>
+            <MainLayout />
+          </AuthGuard>
+        }>
+          <Route index element={<Dashboard />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export default App;
