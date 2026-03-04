@@ -3,6 +3,7 @@ import { Edit3, Loader2, Plus, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useMessage } from '@/components/common/MessageContext';
 import { useCreateUser, useTitles, useUpdateUser } from '../hooks/useUsers';
 import type { User as UserType } from '../types';
 
@@ -33,6 +34,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const isEdit = !!user;
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
+  const message = useMessage();
   const { data: titlesResp } = useTitles();
   const titles = titlesResp?.data || [];
 
@@ -85,12 +87,14 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
     try {
       if (isEdit) {
         await updateUser.mutateAsync({ id: user!.id, data });
+        message.success('用户信息更新成功');
       } else {
         await createUser.mutateAsync(data as any);
+        message.success('新增用户成功');
       }
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || '操作失败，请稍后重试');
     }
   };
 

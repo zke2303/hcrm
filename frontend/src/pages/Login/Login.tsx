@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, AlertCircle, ChevronRight, Lock, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMessage } from '../../components/common/MessageContext';
 import { useAuthStore } from '../../store/useAuthStore';
 import './Login.css';
 
@@ -13,6 +14,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const message = useMessage();
 
   const isLogin = useAuthStore(state => state.isLogin);
   const setLogin = useAuthStore(state => state.setLogin);
@@ -38,6 +40,7 @@ const Login: React.FC = () => {
 
       const { accessToken, user } = response.data.data;
       setLogin(accessToken, user);
+      message.success('登录成功，欢迎进入协作工作台');
       
       // 登录成功转向
       navigate('/', { replace: true });

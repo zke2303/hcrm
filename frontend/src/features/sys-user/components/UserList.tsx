@@ -5,6 +5,8 @@ import {
     Plus
 } from 'lucide-react';
 import React, { useCallback, useState, useTransition } from 'react';
+import { useConfirm } from '@/components/common/ConfirmContext';
+import { useMessage } from '@/components/common/MessageContext';
 import { useDeleteUser, useUpdateUserStatus, useUsers } from '../hooks/useUsers';
 import type { User, UserListParams } from '../types';
 import ResetPasswordDialog from './ResetPasswordDialog';
@@ -25,6 +27,8 @@ const UserList: React.FC = () => {
   const { data: resp, isLoading, isError } = useUsers(params);
   const updateStatusMutation = useUpdateUserStatus();
   const deleteMutation = useDeleteUser();
+  const { confirm } = useConfirm();
+  const message = useMessage();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -65,14 +69,29 @@ const UserList: React.FC = () => {
 
   const handleStatusToggle = useCallback((user: User) => {
     const newStatus = user.status === 1 ? 0 : 1;
-    updateStatusMutation.mutate({ id: user.id, status: newStatus });
-  }, [updateStatusMutation]);
+    updateStatusMutation.mutate({ id: user.id, status: newStatus }, {
+      onSuccess: () => {
+        message.success(`${newStatus === 1 ? '启用' : '禁用'}用户成功`);
+      }
+    });
+  }, [updateStatusMutation, message]);
 
-  const handleDelete = useCallback((id: number) => {
-    if (window.confirm('确定要删除该用户吗？此操作不可恢复。')) {
-      deleteMutation.mutate(id);
+  const handleDelete = useCallback(async (id: number) => {
+    const ok = await confirm({
+      title: '删除确认',
+      message: '确定要删除该用户吗？此操作将永久移除该用户且不可恢复。',
+      confirmLabel: '删除',
+      variant: 'danger'
+    });
+
+    if (ok) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          message.success('用户删除成功');
+        }
+      });
     }
-  }, [deleteMutation]);
+  }, [deleteMutation, confirm, message]);
 
   return (
     <div className="m-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100">

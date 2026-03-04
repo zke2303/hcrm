@@ -3,6 +3,7 @@ import { KeyRound, Loader2, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useMessage } from '@/components/common/MessageContext';
 import { useUpdateUser } from '../hooks/useUsers';
 import type { User } from '../types';
 
@@ -20,6 +21,7 @@ interface ResetPasswordDialogProps {
 
 const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ open, onClose, user }) => {
   const updateUser = useUpdateUser();
+  const message = useMessage();
 
   const {
     register,
@@ -51,10 +53,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({ open, onClose
           password: data.password 
         } as any
       });
-      alert('密码重置成功');
+      message.success('密码重置成功');
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || '密码重置失败');
     }
   };
 

@@ -1,6 +1,6 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { Check, Loader2, Shield, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useMessage } from '@/components/common/MessageContext';
 import { useRoles, useUpdateUser } from '../hooks/useUsers';
 import type { User } from '../types';
 
@@ -11,8 +11,8 @@ interface UserRoleDialogProps {
 }
 
 const UserRoleDialog: React.FC<UserRoleDialogProps> = ({ open, onClose, user }) => {
-  const queryClient = useQueryClient();
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
+  const message = useMessage();
 
   const { data: rolesResp, isLoading: rolesLoading } = useRoles();
   const updateMutation = useUpdateUser();
@@ -41,10 +41,10 @@ const UserRoleDialog: React.FC<UserRoleDialogProps> = ({ open, onClose, user }) 
           roleIds: selectedRoleIds
         } as any
       });
-      alert('角色配置成功');
+      message.success('角色配置成功');
       onClose();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      message.error(err.response?.data?.message || '角色配置失败');
     }
   };
 

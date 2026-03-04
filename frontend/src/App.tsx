@@ -7,6 +7,8 @@ import { HasPermission } from './components/Auth/HasPermission';
 import UserList from './features/sys-user/components/UserList';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login/Login';
+import { ConfirmProvider } from './components/common/ConfirmContext';
+import { MessageProvider } from './components/common/MessageContext';
 import { useAuthStore } from './store/useAuthStore';
 
 const queryClient = new QueryClient({
@@ -43,26 +45,30 @@ const Dashboard: React.FC = () => {
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={
-            <AuthGuard>
-              <MainLayout />
-            </AuthGuard>
-          }>
-            <Route index element={<Dashboard />} />
-            
-            {/* 系统管理 */}
-            <Route path="system">
-              <Route path="users" element={<UserList />} />
-            </Route>
-          </Route>
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <ConfirmProvider>
+        <MessageProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              
+              <Route path="/" element={
+                <AuthGuard>
+                  <MainLayout />
+                </AuthGuard>
+              }>
+                <Route index element={<Dashboard />} />
+                
+                {/* 系统管理 */}
+                <Route path="system">
+                  <Route path="users" element={<UserList />} />
+                </Route>
+              </Route>
+    
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </MessageProvider>
+      </ConfirmProvider>
     </QueryClientProvider>
   );
 };

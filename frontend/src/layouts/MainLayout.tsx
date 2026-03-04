@@ -2,16 +2,28 @@ import { LayoutDashboard, LogOut, Settings, User as UserIcon, Users } from 'luci
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import '../App.css';
+import { useConfirm } from '../components/common/ConfirmContext';
 import { useAuthStore } from '../store/useAuthStore';
 
 const MainLayout: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const setLogout = useAuthStore(state => state.setLogout);
   const navigate = useNavigate();
+  const { confirm } = useConfirm();
 
-  const handleLogout = () => {
-    setLogout();
-    navigate('/login');
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: '安全退出',
+      message: '确定要注销当前系统账号吗？',
+      confirmLabel: '退出登录',
+      cancelLabel: '返回',
+      variant: 'danger'
+    });
+
+    if (ok) {
+      setLogout();
+      navigate('/login');
+    }
   };
 
   return (
