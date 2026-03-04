@@ -8,7 +8,7 @@ HCRM 系统目前没有用户认证层。我们需要从头开始，为前端 (R
 
 1. 实现安全的密码存储 (bcrypt)。
 2. 建立双令牌认证系统 (Access Token & Refresh Token)。
-3. 为前端实施“极简白” (Minimalist White) 设计风格。
+3. 为前端实施“蓝白色” (Professional Blue & Clinical White) 设计风格。
 4. 在 GORM 基础上实现用户 Repository 层。
 
 **Non-Goals:**
@@ -22,7 +22,7 @@ HCRM 系统目前没有用户认证层。我们需要从头开始，为前端 (R
 1. **认证驱动**: 使用 JWT (AccessToken + RefreshToken)。AccessToken 存储在内存以防 XSS，RefreshToken 存储在 HttpOnly Cookie 以维持会话。
 2. **密码加密**: 使用 `bcrypt` 算法，哈希强度设置为 10 (DefaultCost)。
 3. **数据库**: 在 `users` 表中，`username` 设计为唯一索引 (Unique Index)。
-4. **前端 UI**: 基于原生 CSS 或基础 UI 组件库实现“极简白”布局，主打留白与黑色聚焦按钮。
+4. **前端 UI**: 基于原生 CSS 实现“蓝白色”布局。主色使用医疗蓝 (#0056D2)，背景使用冰点白 (#FBFDFF)，提升信任感。
 
 ## Risks / Trade-offs
 
