@@ -23,6 +23,7 @@ type UserRepository interface {
 	ResetPassword(ctx context.Context, id uint, passwordHash string) error
 	UpdateRoles(ctx context.Context, userID uint, roleIDs []uint) error
 	GetRoles(ctx context.Context, userID uint) ([]model.Role, error)
+	ListRolesByUserIDs(ctx context.Context, userIDs []uint) (map[uint][]model.Role, error)
 	GetRolesAndPermissions(ctx context.Context, userID uint) ([]string, []string, error)
 	GetDoctorByUserID(ctx context.Context, userID uint) (*model.Doctor, error)
 	UpdateLastLogin(ctx context.Context, userID uint, ip string) error
@@ -181,6 +182,31 @@ func (r *userRepository) GetRoles(ctx context.Context, userID uint) ([]model.Rol
 		Where("user_roles.user_id = ?", userID).
 		Find(&roles).Error
 	return roles, err
+}
+
+func (r *userRepository) ListRolesByUserIDs(ctx context.Context, userIDs []uint) (map[uint][]model.Role, error) {
+	if len(userIDs) == 0 {
+		return make(map[uint][]model.Role), nil
+	}
+
+	var results []struct {
+		UserID uint
+		model.Role
+	}
+	err := r.db(ctx).Table("roles").
+		Select("user_roles.user_id, roles.*").
+		Joins("JOIN user_roles ON roles.id = user_roles.role_id").
+		Where("user_roles.user_id IN ?", userIDs).
+		Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[uint][]model.Role)
+	for _, item := range results {
+		res[item.UserID] = append(res[item.UserID], item.Role)
+	}
+	return res, nil
 }
 
 func (r *userRepository) GetRolesAndPermissions(ctx context.Context, userID uint) ([]string, []string, error) {

@@ -85,6 +85,14 @@ func (m *MockUserRepository) GetRoles(ctx context.Context, userID uint) ([]model
 	return args.Get(0).([]model.Role), args.Error(1)
 }
 
+func (m *MockUserRepository) ListRolesByUserIDs(ctx context.Context, userIDs []uint) (map[uint][]model.Role, error) {
+	args := m.Called(ctx, userIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[uint][]model.Role), args.Error(1)
+}
+
 func (m *MockUserRepository) GetRolesAndPermissions(ctx context.Context, userID uint) ([]string, []string, error) {
 	args := m.Called(ctx, userID)
 	return args.Get(0).([]string), args.Get(1).([]string), args.Error(2)

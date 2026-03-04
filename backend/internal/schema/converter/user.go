@@ -48,14 +48,15 @@ func UserToVO(user *model.User, dept *model.Department, roles []model.Role, doct
 }
 
 // UserListToVO 将用户列表转换为 VO 列表
-func UserListToVO(users []*model.User, depts map[uint]*model.Department) []*vo.UserVO {
+func UserListToVO(users []*model.User, depts map[uint]*model.Department, rolesMap map[uint][]model.Role) []*vo.UserVO {
 	res := make([]*vo.UserVO, 0, len(users))
 	for _, user := range users {
 		var dept *model.Department
 		if user.DepartmentID != nil {
 			dept = depts[*user.DepartmentID]
 		}
-		res = append(res, UserToVO(user, dept, nil, nil))
+		roles := rolesMap[user.ID]
+		res = append(res, UserToVO(user, dept, roles, nil))
 	}
 	return res
 }

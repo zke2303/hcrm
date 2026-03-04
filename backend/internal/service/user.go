@@ -275,9 +275,16 @@ func (s *userService) List(ctx context.Context, req *dto.ListUserRequest) (*vo.P
 	}
 	depts, _ := s.deptRepo.ListByIDs(ctx, deptIDs)
 
+	// 批量获取角色
+	userIDs := make([]uint, 0)
+	for _, u := range users {
+		userIDs = append(userIDs, u.ID)
+	}
+	rolesMap, _ := s.userRepo.ListRolesByUserIDs(ctx, userIDs)
+
 	return &vo.PageResponse{
 		Total: total,
-		List:  converter.UserListToVO(users, depts),
+		List:  converter.UserListToVO(users, depts, rolesMap),
 	}, nil
 }
 
