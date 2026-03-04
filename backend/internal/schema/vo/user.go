@@ -26,9 +26,3 @@ type UserVO struct {
 	Specialty    string `json:"specialty,omitempty"`
 	Introduction string `json:"introduction,omitempty"`
 }
-
-// RoleVO 角色简要信息
-type RoleVO struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-}

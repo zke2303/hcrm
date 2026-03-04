@@ -2,6 +2,7 @@ import axios from '../../api/axios';
 import type {
     ApiResponse,
     CreateUserRequest,
+    Role,
     UpdateUserRequest,
     User,
     UserListParams,
@@ -36,4 +37,8 @@ export const userApi = {
   // 重置密码
   resetPassword: (id: number, password: string) => 
     axios.put<any, ApiResponse<void>>(`/v1/users/${id}/password`, { password }),
+
+  // 获取所有可用角色
+  getRoles: () => 
+    axios.get<any, ApiResponse<Role[]>>('/v1/users/roles'),
 };

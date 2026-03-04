@@ -26,6 +26,7 @@ type UserRepository interface {
 	GetRolesAndPermissions(ctx context.Context, userID uint) ([]string, []string, error)
 	GetDoctorByUserID(ctx context.Context, userID uint) (*model.Doctor, error)
 	UpdateLastLogin(ctx context.Context, userID uint, ip string) error
+	FindAllRoles(ctx context.Context) ([]model.Role, error)
 }
 
 type txKey struct{}
@@ -211,4 +212,10 @@ func (r *userRepository) UpdateLastLogin(ctx context.Context, userID uint, ip st
 		"last_login_at": &now,
 		"last_login_ip": ip,
 	}).Error
+}
+
+func (r *userRepository) FindAllRoles(ctx context.Context) ([]model.Role, error) {
+	var roles []model.Role
+	err := r.db(ctx).Order("id ASC").Find(&roles).Error
+	return roles, err
 }

@@ -185,11 +185,27 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	Success(c, nil)
 }
 
+// ListRoles 获取所有角色列表
+func (h *UserHandler) ListRoles(c *gin.Context) {
+	roles, err := h.userSvc.ListRoles(c.Request.Context())
+	if err != nil {
+		if e, ok := err.(*errors.Error); ok {
+			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
+		} else {
+			Fail(c, errors.ErrInternal.Code, err.Error())
+		}
+		return
+	}
+
+	Success(c, roles)
+}
+
 // RegisterUserRoutes 注册用户模块路由
 func RegisterUserRoutes(r *gin.RouterGroup, h *UserHandler) {
 	users := r.Group("/v1/users")
 	{
 		users.GET("", h.List)
+		users.GET("/roles", h.ListRoles) // 注意：路由顺序，roles 需要在 /:id 前面
 		users.POST("", h.Create)
 		users.GET("/:id", h.GetByID)
 		users.PUT("/:id", h.Update)

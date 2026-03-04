@@ -1,18 +1,13 @@
 .app-main {
-  min-height: 100vh;
-  padding-top: 80px;
+  height: 100vh;
 }
 
 .app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 32px;
   z-index: 100;
   border-bottom: 1.5px solid rgba(0, 86, 210, 0.08);
 }
@@ -45,9 +40,7 @@
 }
 
 .content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px;
+  padding: 0;
 }
 
 .workbench-card {

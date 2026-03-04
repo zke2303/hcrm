@@ -1,17 +1,20 @@
 import {
-    Edit3,
-    Key,
-    MoreHorizontal,
-    Plus,
-    Power,
-    PowerOff,
-    Search,
-    Trash2,
-    Users
+  Edit3,
+  Key,
+  MoreHorizontal,
+  Plus,
+  Power,
+  PowerOff,
+  Search,
+  Trash2,
+  Users
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useDeleteUser, useUpdateUserStatus, useUsers } from '../hooks/useUsers';
 import type { User, UserListParams } from '../types';
+import ResetPasswordDialog from './ResetPasswordDialog';
+import UserDialog from './UserDialog';
+import UserRoleDialog from './UserRoleDialog';
 
 const UserList: React.FC = () => {
   const [params, setParams] = useState<UserListParams>({
@@ -24,6 +27,31 @@ const UserList: React.FC = () => {
   const { data: resp, isLoading } = useUsers(params);
   const updateStatusMutation = useUpdateUserStatus();
   const deleteMutation = useDeleteUser();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [resetPwdOpen, setResetPwdOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleAdd = () => {
+    setSelectedUser(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setDialogOpen(true);
+  };
+
+  const handleOpenRoleDialog = (user: User) => {
+    setSelectedUser(user);
+    setRoleDialogOpen(true);
+  };
+
+  const handleOpenResetPwd = (user: User) => {
+    setSelectedUser(user);
+    setResetPwdOpen(true);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +81,10 @@ const UserList: React.FC = () => {
             <p className="text-sm text-text-sub">管理系统账号及权限分配</p>
           </div>
         </div>
-        <button className="flex-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-all">
+        <button 
+          onClick={handleAdd}
+          className="flex-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-light transition-all"
+        >
           <Plus size={18} />
           <span>新增用户</span>
         </button>
@@ -118,13 +149,13 @@ const UserList: React.FC = () => {
                     <span className="text-sm font-medium">{user.phone}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {user.roles.map(r => (
-                        <span key={r.id} className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full">
-                          {r.name}
-                        </span>
-                      ))}
-                    </div>
+                      <button 
+                        onClick={() => handleOpenRoleDialog(user)}
+                        className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full hover:bg-blue-200 transition-colors"
+                        title="点击管理角色"
+                      >
+                        {user.roles.map(r => r.name).join(', ') || '未分配'}
+                      </button>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -142,6 +173,7 @@ const UserList: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
+                        onClick={() => handleEdit(user)}
                         className="p-1.5 hover:bg-black/5 rounded-md text-text-sub hover:text-primary transition-colors"
                         title="编辑"
                       >
@@ -157,6 +189,7 @@ const UserList: React.FC = () => {
                         {user.status === 1 ? <PowerOff size={16} /> : <Power size={16} />}
                       </button>
                       <button 
+                        onClick={() => handleOpenResetPwd(user)}
                         className="p-1.5 hover:bg-black/5 rounded-md text-text-sub hover:text-primary transition-colors"
                         title="重置密码"
                       >
@@ -208,6 +241,25 @@ const UserList: React.FC = () => {
            </div>
         </div>
       </div>
+
+      <UserDialog 
+        open={dialogOpen} 
+        onClose={() => setDialogOpen(false)} 
+        user={selectedUser} 
+      />
+
+      <UserRoleDialog 
+        open={roleDialogOpen} 
+        onClose={() => setRoleDialogOpen(false)} 
+        user={selectedUser} 
+      />
+
+      <ResetPasswordDialog 
+        open={resetPwdOpen} 
+        onClose={() => setResetPwdOpen(false)} 
+        userId={selectedUser?.id || 0} 
+        username={selectedUser?.realName || ''} 
+      />
     </div>
   );
 };

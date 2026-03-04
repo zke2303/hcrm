@@ -22,6 +22,7 @@ type UserService interface {
 	List(ctx context.Context, req *dto.ListUserRequest) (*vo.PageResponse, error)
 	UpdateStatus(ctx context.Context, id uint, status int8) error
 	ResetPassword(ctx context.Context, id uint, password string) error
+	ListRoles(ctx context.Context) ([]*vo.RoleVO, error)
 }
 
 type userService struct {
@@ -261,4 +262,13 @@ func (s *userService) ResetPassword(ctx context.Context, id uint, password strin
 	}
 
 	return s.userRepo.ResetPassword(ctx, id, string(hashed))
+}
+
+func (s *userService) ListRoles(ctx context.Context) ([]*vo.RoleVO, error) {
+	roles, err := s.userRepo.FindAllRoles(ctx)
+	if err != nil {
+		return nil, errors.ErrDatabase.WithError(err)
+	}
+
+	return converter.RoleListToVO(roles), nil
 }
