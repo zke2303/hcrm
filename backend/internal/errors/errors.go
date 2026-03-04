@@ -59,11 +59,19 @@ func (e *Error) HTTPStatus() int {
 
 // 通用错误定义
 var (
-	ErrBadRequest      = NewError(10001, "请求参数错误")
-	ErrUnauthorized    = NewError(20001, "未授权访问")
-	ErrForbidden       = NewError(30001, "禁止访问")
-	ErrNotFound        = NewError(40001, "资源不存在")
-	ErrInternal        = NewError(50001, "服务器内部错误")
-	ErrDatabase        = NewError(50002, "数据库错误")
+	ErrBadRequest         = NewError(10001, "请求参数错误")
+	ErrUnauthorized       = NewError(20001, "未授权访问")
+	ErrForbidden          = NewError(30001, "禁止访问")
+	ErrNotFound           = NewError(40001, "资源不存在")
+	ErrInternal           = NewError(50001, "服务器内部错误")
+	ErrDatabase           = NewError(50002, "数据库错误")
 	ErrServiceUnavailable = NewError(50003, "服务暂不可用")
+
+	// 用户管理模块 (11000-11999)
+	ErrUserNotFound       = NewError(11010, "用户不存在")
+	ErrUserExists         = NewError(11020, "用户账号已存在")
+	ErrPhoneExists        = NewError(11030, "手机号已被占用")
+	ErrDepartmentNotFound = NewError(11040, "所属科室不存在")
+	ErrInvalidPassword    = NewError(11050, "密码不合法")
+	ErrSelfAction         = NewError(11060, "不能对自己进行此项操作")
 )

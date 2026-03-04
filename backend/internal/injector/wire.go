@@ -42,6 +42,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		// 服务层
 		service.NewHealthService,
 		service.NewAuthService,
+		service.NewUserService,
 		// 处理器层
 		handler.NewHealthHandler,
 		handler.NewAuthHandler,
