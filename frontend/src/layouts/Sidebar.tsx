@@ -161,7 +161,7 @@ const Sidebar: React.FC = () => {
       {MENU_DATA.map((section, idx) => (
         <div key={idx} className="flex flex-col">
           <div className="px-4 mb-2">
-            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            <h3 className="text-xs font-semibold text-gray-400 tracking-wider">
               {section.title}
             </h3>
           </div>
