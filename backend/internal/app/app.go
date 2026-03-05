@@ -92,6 +92,7 @@ func (a *App) registerMiddlewares() {
 	a.router.Use(middleware.Recovery())
 	a.router.Use(middleware.Logger())
 	a.router.Use(middleware.CORS())
+	a.router.Use(middleware.ErrorHandler())
 }
 
 // registerRoutes 注册路由
