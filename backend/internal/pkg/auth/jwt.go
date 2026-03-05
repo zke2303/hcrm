@@ -11,8 +11,9 @@ import (
 
 // Claims JWT 载荷
 type Claims struct {
-	UserID   uint   `json:"userID"`
-	Username string `json:"username"`
+	UserID       uint   `json:"userID"`
+	Username     string `json:"username"`
+	DepartmentID uint   `json:"departmentID"`
 	jwt.RegisteredClaims
 }
 
@@ -31,19 +32,20 @@ func NewJWTHelper(cfg *config.JWTConfig) *JWTHelper {
 }
 
 // GenerateToken 生成令牌
-func (h *JWTHelper) GenerateToken(userID uint, username string) (string, error) {
-	return h.generateTokenWithExpire(userID, username, h.expire)
+func (h *JWTHelper) GenerateToken(userID uint, username string, deptID uint) (string, error) {
+	return h.generateTokenWithExpire(userID, username, deptID, h.expire)
 }
 
 // GenerateRefreshToken 生成刷新令牌 (7天过期)
-func (h *JWTHelper) GenerateRefreshToken(userID uint, username string) (string, error) {
-	return h.generateTokenWithExpire(userID, username, 7*24*time.Hour)
+func (h *JWTHelper) GenerateRefreshToken(userID uint, username string, deptID uint) (string, error) {
+	return h.generateTokenWithExpire(userID, username, deptID, 7*24*time.Hour)
 }
 
-func (h *JWTHelper) generateTokenWithExpire(userID uint, username string, expire time.Duration) (string, error) {
+func (h *JWTHelper) generateTokenWithExpire(userID uint, username string, deptID uint, expire time.Duration) (string, error) {
 	claims := Claims{
-		UserID:   userID,
-		Username: username,
+		UserID:       userID,
+		Username:     username,
+		DepartmentID: deptID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expire)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -60,7 +62,6 @@ func (h *JWTHelper) ParseToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return h.secret, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
