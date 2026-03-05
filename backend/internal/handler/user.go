@@ -24,17 +24,13 @@ func NewUserHandler(userSvc service.UserService) *UserHandler {
 func (h *UserHandler) Create(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	resp, err := h.userSvc.Create(c.Request.Context(), &req)
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -46,22 +42,18 @@ func (h *UserHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "无效的用户ID")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("无效的用户ID"))
 		return
 	}
 
 	var req dto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	if err := h.userSvc.Update(c.Request.Context(), uint(id), &req); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -73,16 +65,12 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "无效的用户ID")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("无效的用户ID"))
 		return
 	}
 
 	if err := h.userSvc.Delete(c.Request.Context(), uint(id)); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -94,17 +82,13 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "无效的用户ID")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("无效的用户ID"))
 		return
 	}
 
 	user, err := h.userSvc.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -115,17 +99,13 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 func (h *UserHandler) List(c *gin.Context) {
 	var req dto.ListUserRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	resp, err := h.userSvc.List(c.Request.Context(), &req)
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -137,22 +117,18 @@ func (h *UserHandler) UpdateStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "无效的用户ID")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("无效的用户ID"))
 		return
 	}
 
 	var req dto.UpdateUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	if err := h.userSvc.UpdateStatus(c.Request.Context(), uint(id), req.Status); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -164,22 +140,18 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "无效的用户ID")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("无效的用户ID"))
 		return
 	}
 
 	var req dto.ResetUserPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	if err := h.userSvc.ResetPassword(c.Request.Context(), uint(id), req.Password); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -190,11 +162,7 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 func (h *UserHandler) ListRoles(c *gin.Context) {
 	roles, err := h.userSvc.ListRoles(c.Request.Context())
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -205,11 +173,7 @@ func (h *UserHandler) ListRoles(c *gin.Context) {
 func (h *UserHandler) ListTitles(c *gin.Context) {
 	titles, err := h.userSvc.ListTitles(c.Request.Context())
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -220,11 +184,7 @@ func (h *UserHandler) ListTitles(c *gin.Context) {
 func (h *UserHandler) ListDepartments(c *gin.Context) {
 	depts, err := h.userSvc.ListDepartments(c.Request.Context())
 	if err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 
@@ -235,22 +195,18 @@ func (h *UserHandler) ListDepartments(c *gin.Context) {
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		Fail(c, 40101, "未登录")
+		_ = c.Error(errors.ErrUnauthorized.WithMessage("未登录"))
 		return
 	}
 
 	var req dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, errors.ErrBadRequest.Code, "参数校验失败: "+err.Error())
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 
 	if err := h.userSvc.ChangePassword(c.Request.Context(), userID.(uint), &req); err != nil {
-		if e, ok := err.(*errors.Error); ok {
-			FailWithStatus(c, e.HTTPStatus(), e.Code, e.Message)
-		} else {
-			Fail(c, errors.ErrInternal.Code, err.Error())
-		}
+		_ = c.Error(err)
 		return
 	}
 

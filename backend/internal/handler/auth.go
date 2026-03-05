@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
+	"hcrm/backend/internal/errors"
 	"hcrm/backend/internal/schema/vo"
 	"hcrm/backend/internal/service"
 )
@@ -21,14 +22,14 @@ func NewAuthHandler(authSvc service.AuthService) *AuthHandler {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req vo.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Fail(c, 40001, "请求参数无效")
+		_ = c.Error(errors.ErrBadRequest.WithMessage("请求参数无效"))
 		return
 	}
 
 	ip := c.ClientIP()
 	resp, err := h.authSvc.Login(c.Request.Context(), &req, ip)
 	if err != nil {
-		Fail(c, 40101, err.Error())
+		_ = c.Error(err)
 		return
 	}
 
@@ -42,13 +43,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
-		Fail(c, 40102, "无刷新令牌")
+		_ = c.Error(errors.ErrUnauthorized.WithMessage("无刷新令牌"))
 		return
 	}
 
 	accessToken, err := h.authSvc.Refresh(c.Request.Context(), refreshToken)
 	if err != nil {
-		Fail(c, 40103, err.Error())
+		_ = c.Error(err)
 		return
 	}
 
