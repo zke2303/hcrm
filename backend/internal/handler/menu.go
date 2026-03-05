@@ -79,7 +79,7 @@ func (h *MenuHandler) List(c *gin.Context) {
 }
 
 func RegisterMenuRoutes(r *gin.RouterGroup, h *MenuHandler) {
-	menus := r.Group("/menus")
+	menus := r.Group("/v1/menus")
 	{
 		menus.GET("", h.List)
 		menus.POST("", h.Create)

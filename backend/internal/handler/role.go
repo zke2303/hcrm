@@ -134,7 +134,7 @@ func (h *RoleHandler) Copy(c *gin.Context) {
 }
 
 func RegisterRoleRoutes(r *gin.RouterGroup, h *RoleHandler) {
-	roles := r.Group("/roles")
+	roles := r.Group("/v1/roles")
 	{
 		roles.GET("", h.List)
 		roles.POST("", h.Create)
