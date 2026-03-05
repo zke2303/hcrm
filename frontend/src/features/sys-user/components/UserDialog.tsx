@@ -97,8 +97,8 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
       } else {
         const resp = await createUser.mutateAsync(data as any);
         // Show success message with employee number and default password
-        const result = resp;
-        if (result) {
+        const result = resp as any;
+        if (result && result.employeeNo) {
           message.success(
             `新增用户成功！工号: ${result.employeeNo}，默认密码: ${result.defaultPassword}。请妥善保管登录信息。`
           );

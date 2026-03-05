@@ -172,6 +172,24 @@ func (m *MockDoctorRepository) Delete(ctx context.Context, id uint) error {
 	return args.Error(0)
 }
 
+func (m *MockDoctorRepository) UpdateDepartments(ctx context.Context, doctorID uint, deptIDs []uint, primaryDeptID uint) error {
+	args := m.Called(ctx, doctorID, deptIDs, primaryDeptID)
+	return args.Error(0)
+}
+
+func (m *MockDoctorRepository) FindInDepartments(ctx context.Context, deptIDs []uint) (map[uint][]*model.Doctor, error) {
+	args := m.Called(ctx, deptIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[uint][]*model.Doctor), args.Error(1)
+}
+
+func (m *MockDoctorRepository) RemoveFromDepartment(ctx context.Context, doctorID uint, deptID uint) error {
+	args := m.Called(ctx, doctorID, deptID)
+	return args.Error(0)
+}
+
 // MockDepartmentRepository 科室仓储 Mock
 type MockDepartmentRepository struct {
 	mock.Mock
@@ -196,6 +214,19 @@ func (m *MockDepartmentRepository) FindAll(ctx context.Context) ([]*model.Depart
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*model.Department), args.Error(1)
+}
+
+func (m *MockDepartmentRepository) FindDescendantIDs(ctx context.Context, rootID uint) ([]uint, error) {
+	args := m.Called(ctx, rootID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]uint), args.Error(1)
+}
+
+func (m *MockDepartmentRepository) Update(ctx context.Context, dept *model.Department) error {
+	args := m.Called(ctx, dept)
+	return args.Error(0)
 }
 
 // MockTitleRepository 职称仓储 Mock
@@ -228,6 +259,7 @@ func TestUserService_Create(t *testing.T) {
 	// 1. 模拟校验成功（返回记录未找到代表账号可用）
 	userRepo.On("GetByUsername", ctx, req.Username).Return((*model.User)(nil), gorm.ErrRecordNotFound)
 	userRepo.On("GetByPhone", ctx, req.Phone).Return((*model.User)(nil), gorm.ErrRecordNotFound)
+	userRepo.On("GetMaxEmployeeNo", ctx).Return("EMP00000", nil)
 	userRepo.On("Create", ctx, mock.AnythingOfType("*model.User")).Return(nil)
 
 	_, err := svc.Create(ctx, req)

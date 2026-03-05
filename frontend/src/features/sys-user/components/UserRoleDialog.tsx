@@ -48,7 +48,7 @@ const UserRoleDialog: React.FC<UserRoleDialogProps> = ({ open, onClose, user }) 
     }
   };
 
-  const roles = rolesResp?.data || [];
+  const roles = (rolesResp as any)?.data || (Array.isArray(rolesResp) ? rolesResp : []);
 
   return (
     <>

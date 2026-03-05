@@ -118,18 +118,21 @@ func (s *userService) Create(ctx context.Context, req *dto.CreateUserRequest) (*
 				UserID:       &user.ID,
 				RealName:     user.RealName,
 				Phone:        user.Phone,
-				DepartmentID: 0, // 默认或从 req 获取
 				Title:        req.Title,
 				Specialty:    req.Specialty,
 				Introduction: req.Introduction,
 				EmployeeNo:   user.EmployeeNo,
 				Status:       1,
 			}
-			if user.DepartmentID != nil {
-				doctor.DepartmentID = *user.DepartmentID
-			}
 			if err := s.doctorRepo.Create(txCtx, doctor); err != nil {
 				return err
+			}
+
+			// 设置医生科室关联
+			if user.DepartmentID != nil {
+				if err := s.doctorRepo.UpdateDepartments(txCtx, doctor.ID, []uint{*user.DepartmentID}, *user.DepartmentID); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -209,9 +212,6 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 				doctor.Title = req.Title
 				doctor.Specialty = req.Specialty
 				doctor.Introduction = req.Introduction
-				if user.DepartmentID != nil {
-					doctor.DepartmentID = *user.DepartmentID
-				}
 
 				if doctor.ID == 0 {
 					if err := s.doctorRepo.Create(txCtx, doctor); err != nil {
@@ -219,6 +219,13 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 					}
 				} else {
 					if err := s.doctorRepo.Update(txCtx, doctor); err != nil {
+						return err
+					}
+				}
+
+				// 更新医生科室关联
+				if user.DepartmentID != nil {
+					if err := s.doctorRepo.UpdateDepartments(txCtx, doctor.ID, []uint{*user.DepartmentID}, *user.DepartmentID); err != nil {
 						return err
 					}
 				}

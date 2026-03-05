@@ -6,7 +6,6 @@ type Doctor struct {
 	UserID       *uint      `gorm:"unique;index;comment:关联的用户ID" json:"userId"`
 	RealName     string     `gorm:"size:50;not null;comment:真实姓名" json:"realName"`
 	Phone        string     `gorm:"size:11;unique;not null;comment:手机号" json:"phone"`
-	DepartmentID uint       `gorm:"not null;index;comment:所属科室ID" json:"departmentId"`
 	Title        string     `gorm:"size:50;comment:职称" json:"title"`
 	Specialty    string     `gorm:"size:200;comment:擅长领域" json:"specialty"`
 	Introduction string     `gorm:"type:text;comment:简介" json:"introduction"`
