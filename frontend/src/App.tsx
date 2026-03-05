@@ -7,6 +7,7 @@ import { HasPermission } from './components/Auth/HasPermission';
 import UserList from './features/sys-user/components/UserList';
 import RoleList from './features/sys-role/components/RoleList';
 import MenuList from './features/sys-menu/components/MenuList';
+import OrgPage from './pages/Org/OrgPage';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login/Login';
 import { ConfirmProvider } from './components/common/ConfirmContext';
@@ -65,6 +66,7 @@ const App: React.FC = () => {
                   <Route path="user" element={<UserList />} />
                   <Route path="role" element={<RoleList />} />
                   <Route path="menu" element={<MenuList />} />
+                  <Route path="org" element={<OrgPage />} />
                 </Route>
               </Route>
     
