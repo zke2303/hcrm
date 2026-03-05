@@ -5,6 +5,8 @@ import './App.css';
 import AuthGuard from './components/Auth/AuthGuard';
 import { HasPermission } from './components/Auth/HasPermission';
 import UserList from './features/sys-user/components/UserList';
+import RoleList from './features/sys-role/components/RoleList';
+import MenuList from './features/sys-menu/components/MenuList';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login/Login';
 import { ConfirmProvider } from './components/common/ConfirmContext';
@@ -60,7 +62,9 @@ const App: React.FC = () => {
                 
                 {/* 系统管理 */}
                 <Route path="system">
-                  <Route path="users" element={<UserList />} />
+                  <Route path="user" element={<UserList />} />
+                  <Route path="role" element={<RoleList />} />
+                  <Route path="menu" element={<MenuList />} />
                 </Route>
               </Route>
     

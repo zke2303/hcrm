@@ -1,7 +1,9 @@
-import { ChevronDown, ChevronRight, LayoutDashboard, Settings, Users, Shield, Database, Activity } from 'lucide-react';
-import React, { useState } from 'react';
+import * as Icons from 'lucide-react';
+import { ChevronDown, ChevronRight, LayoutDashboard } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface MenuItem {
   id: string;
@@ -16,66 +18,53 @@ interface MenuSection {
   items: MenuItem[];
 }
 
-const MENU_DATA: MenuSection[] = [
-  {
-    title: '统计分析',
-    items: [
-      {
-        id: 'dashboard',
-        label: '工作台',
-        icon: <LayoutDashboard size={18} />,
-        path: '/'
-      }
-    ]
-  },
-  {
-    title: '系统核心',
-    items: [
-      {
-        id: 'system',
-        label: '系统管理',
-        icon: <Settings size={18} />,
-        children: [
-          {
-            id: 'users',
-            label: '用户管理',
-            icon: <Users size={16} />,
-            path: '/system/users'
-          },
-          {
-            id: 'roles',
-            label: '角色权限',
-            icon: <Shield size={16} />,
-            path: '/system/roles'
-          },
-          {
-            id: 'dicts',
-            label: '字典数据',
-            icon: <Database size={16} />,
-            path: '/system/dicts'
-          }
-        ]
-      },
-      {
-        id: 'monitor',
-        label: '系统监控',
-        icon: <Activity size={18} />,
-        children: [
-          {
-            id: 'logs',
-            label: '操作日志',
-            path: '/system/logs'
-          }
-        ]
-      }
-    ]
-  }
-];
+const getIcon = (name?: string, size = 16) => {
+    if (!name) return null;
+    const IconComponent = (Icons as any)[name];
+    return IconComponent ? <IconComponent size={size} /> : null;
+};
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useAuthStore(state => state.user);
   const [openMenus, setOpenMenus] = useState<string[]>(['system']);
+
+  const mapMenu = (m: any, parentPath: string = ''): MenuItem => {
+    let currentPath = m.path || '';
+    if (currentPath && !currentPath.startsWith('/')) {
+      currentPath = `${parentPath}/${currentPath}`.replace(/\/+/g, '/');
+    }
+    return {
+      id: String(m.id),
+      label: m.name,
+      icon: getIcon(m.icon),
+      path: currentPath,
+      children: m.children?.map((c: any) => mapMenu(c, currentPath))
+    };
+  };
+
+  const menuData = useMemo<MenuSection[]>(() => {
+    const dynamicItems = user?.menus?.map(m => mapMenu(m)) || [];
+    
+    return [
+      {
+        title: '统计分析',
+        items: [
+          {
+            id: 'dashboard',
+            label: '工作台',
+            icon: <LayoutDashboard size={18} />,
+            path: '/'
+          }
+        ]
+      },
+      {
+        title: '系统资源',
+        items: dynamicItems
+      }
+    ];
+  }, [user?.menus]);
 
   const toggleMenu = (id: string) => {
     setOpenMenus(prev => 
@@ -158,16 +147,20 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside className="app-sidebar backdrop-blur-md bg-white/80 border-r border-gray-100 flex flex-col gap-6 p-4">
-      {MENU_DATA.map((section, idx) => (
+      {menuData.map((section, idx) => (
         <div key={idx} className="flex flex-col">
-          <div className="px-4 mb-2">
-            <h3 className="text-xs font-semibold text-gray-400 tracking-wider">
-              {section.title}
-            </h3>
-          </div>
-          <div className="flex flex-col">
-            {section.items.map(item => renderMenuItem(item))}
-          </div>
+          {section.items.length > 0 && (
+            <>
+              <div className="px-4 mb-2">
+                <h3 className="text-xs font-semibold text-gray-400 tracking-wider">
+                  {section.title}
+                </h3>
+              </div>
+              <div className="flex flex-col">
+                {section.items.map(item => renderMenuItem(item))}
+              </div>
+            </>
+          )}
         </div>
       ))}
     </aside>

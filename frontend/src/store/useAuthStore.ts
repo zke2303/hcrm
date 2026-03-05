@@ -8,6 +8,7 @@ interface User {
   phone: string;
   roles: string[];
   permissions: string[];
+  menus: any[];
   doctorId?: number;
   departmentId?: number;
   mustChangePassword: boolean;
