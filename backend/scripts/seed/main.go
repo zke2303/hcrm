@@ -19,6 +19,20 @@ func main() {
 	}
 	fmt.Println("Connect to DB success")
 
+	// 0. Auto Migrate
+	err = db.AutoMigrate(
+		&model.Department{},
+		&model.User{},
+		&model.Role{},
+		&model.UserRole{},
+		&model.Title{},
+	)
+	if err != nil {
+		fmt.Printf("AutoMigrate failed: %v\n", err)
+		return
+	}
+	fmt.Println("AutoMigrate completed")
+
 	// 1. Create Department
 	dept := model.Department{
 		Base:   model.Base{ID: 1},
@@ -94,6 +108,23 @@ func main() {
 	}
 	db.FirstOrCreate(&userRole, model.UserRole{UserID: 1, RoleID: 1})
 	fmt.Println("Admin role association initialized")
+
+	// 5. Create Titles
+	titles := []model.Title{
+		{ID: 1, Name: "主任医师", Level: 4, SortOrder: 1, Status: 1},
+		{ID: 2, Name: "副主任医师", Level: 3, SortOrder: 2, Status: 1},
+		{ID: 3, Name: "主治医师", Level: 2, SortOrder: 3, Status: 1},
+		{ID: 4, Name: "住院医师", Level: 1, SortOrder: 4, Status: 1},
+		{ID: 5, Name: "主任护师", Level: 4, SortOrder: 5, Status: 1},
+		{ID: 6, Name: "副主任护师", Level: 3, SortOrder: 6, Status: 1},
+		{ID: 7, Name: "主管护师", Level: 2, SortOrder: 7, Status: 1},
+		{ID: 8, Name: "护师", Level: 1, SortOrder: 8, Status: 1},
+		{ID: 9, Name: "护士", Level: 1, SortOrder: 9, Status: 1},
+	}
+	for _, t := range titles {
+		db.FirstOrCreate(&t, model.Title{ID: t.ID})
+		fmt.Printf("Title %s initialized\n", t.Name)
+	}
 
 	fmt.Println("Seeding completed successfully")
 }
