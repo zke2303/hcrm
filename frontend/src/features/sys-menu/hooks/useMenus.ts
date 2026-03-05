@@ -5,14 +5,14 @@ import type { CreateMenuRequest, UpdateMenuRequest } from '../types';
 export function useMenuTree() {
   return useQuery({
     queryKey: ['menuTree'],
-    queryFn: () => menuApi.tree().then(res => res.data),
+    queryFn: () => menuApi.tree().then(res => res.data ?? []),
   });
 }
 
 export function useMenu(id: number) {
   return useQuery({
     queryKey: ['menu', id],
-    queryFn: () => menuApi.get(id).then(res => res.data),
+    queryFn: () => menuApi.get(id).then(res => res.data ?? null),
     enabled: !!id,
   });
 }

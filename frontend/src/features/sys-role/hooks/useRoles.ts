@@ -5,14 +5,14 @@ import type { CreateRoleRequest, RoleListParams, UpdateRoleRequest } from '../ty
 export function useRoles(params: RoleListParams) {
   return useQuery({
     queryKey: ['roles', params],
-    queryFn: () => roleApi.list(params).then(res => res.data),
+    queryFn: () => roleApi.list(params).then(res => res.data ?? { list: [], total: 0 }),
   });
 }
 
 export function useRole(id: number) {
   return useQuery({
     queryKey: ['role', id],
-    queryFn: () => roleApi.get(id).then(res => res.data),
+    queryFn: () => roleApi.get(id).then(res => res.data ?? null),
     enabled: !!id,
   });
 }
@@ -80,7 +80,7 @@ export function useAssignRoleMenus() {
 export function useRoleMenus(id: number) {
   return useQuery({
     queryKey: ['role-menus', id],
-    queryFn: () => roleApi.getRoleMenus(id).then(res => res.data),
+    queryFn: () => roleApi.getRoleMenus(id).then(res => res.data ?? []),
     enabled: !!id,
   });
 }
