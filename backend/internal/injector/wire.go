@@ -48,12 +48,14 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		service.NewUserService,
 		service.NewRoleService,
 		service.NewMenuService,
+		service.NewDepartmentService,
 		// 处理器层
 		handler.NewHealthHandler,
 		handler.NewAuthHandler,
 		handler.NewUserHandler,
 		handler.NewRoleHandler,
 		handler.NewMenuHandler,
+		handler.NewDepartmentHandler,
 		// 应用
 		app.New,
 	)

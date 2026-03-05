@@ -63,7 +63,9 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 	menuRepository := repository.NewMenuRepository(db)
 	menuService := service.NewMenuService(menuRepository)
 	menuHandler := handler.NewMenuHandler(menuService)
-	appApp := app.New(config, zapLogger, db, client, healthHandler, authHandler, userHandler, roleHandler, menuHandler, authService, operationLogRepository, jwtHelper)
+	departmentService := service.NewDepartmentService(departmentRepository, doctorRepository)
+	departmentHandler := handler.NewDepartmentHandler(departmentService)
+	appApp := app.New(config, zapLogger, db, client, healthHandler, authHandler, userHandler, roleHandler, menuHandler, departmentHandler, authService, operationLogRepository, jwtHelper)
 	return appApp, func() {
 		cleanup2()
 		cleanup()

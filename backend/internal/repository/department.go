@@ -13,6 +13,8 @@ type DepartmentRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.Department, error)
 	ListByIDs(ctx context.Context, ids []uint) (map[uint]*model.Department, error)
 	FindAll(ctx context.Context) ([]*model.Department, error)
+	FindDescendantIDs(ctx context.Context, parentID uint) ([]uint, error)
+	Update(ctx context.Context, dept *model.Department) error
 }
 
 type departmentRepository struct {
@@ -57,9 +59,50 @@ func (r *departmentRepository) ListByIDs(ctx context.Context, ids []uint) (map[u
 
 func (r *departmentRepository) FindAll(ctx context.Context) ([]*model.Department, error) {
 	var depts []*model.Department
-	err := r.db(ctx).Order("id ASC").Find(&depts).Error
+	err := r.db(ctx).Order("sort_order ASC, id ASC").Find(&depts).Error
 	if err != nil {
 		return nil, err
 	}
 	return depts, nil
+}
+
+func (r *departmentRepository) FindDescendantIDs(ctx context.Context, parentID uint) ([]uint, error) {
+	// 查询全量科室以便在内存中处理层级
+	var allDepts []*model.Department
+	if err := r.db(ctx).Find(&allDepts).Error; err != nil {
+		return nil, err
+	}
+
+	// 映射表加速查找
+	deptMap := make(map[uint][]uint)
+	for _, d := range allDepts {
+		if d.ParentID != nil {
+			deptMap[*d.ParentID] = append(deptMap[*d.ParentID], d.ID)
+		}
+	}
+
+	// 递归收集
+	var res []uint
+	var collect func(id uint)
+	collect = func(id uint) {
+		res = append(res, id)
+		for _, childID := range deptMap[id] {
+			collect(childID)
+		}
+	}
+
+	// 如果 parentID 为 0，通常代表查询全院
+	if parentID == 0 {
+		for _, d := range allDepts {
+			res = append(res, d.ID)
+		}
+		return res, nil
+	}
+
+	collect(parentID)
+	return res, nil
+}
+
+func (r *departmentRepository) Update(ctx context.Context, dept *model.Department) error {
+	return r.db(ctx).Save(dept).Error
 }
