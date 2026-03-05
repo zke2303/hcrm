@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"net/http"
 	"strconv"
 
+	"hcrm/backend/internal/errors"
 	"hcrm/backend/internal/schema/dto"
 	"hcrm/backend/internal/service"
 
@@ -21,61 +21,61 @@ func NewRoleHandler(svc service.RoleService) *RoleHandler {
 func (h *RoleHandler) Create(c *gin.Context) {
 	var req dto.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 	if err := h.svc.Create(c.Request.Context(), &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "创建成功"})
+	Success(c, nil)
 }
 
 func (h *RoleHandler) Update(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req dto.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 	if err := h.svc.Update(c.Request.Context(), uint(id), &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
+	Success(c, nil)
 }
 
 func (h *RoleHandler) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	if err := h.svc.Delete(c.Request.Context(), uint(id)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
+	Success(c, nil)
 }
 
 func (h *RoleHandler) GetByID(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	role, err := h.svc.GetByID(c.Request.Context(), uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, role)
+	Success(c, role)
 }
 
 func (h *RoleHandler) List(c *gin.Context) {
 	var req dto.ListRoleRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数查询解析失败: " + err.Error()))
 		return
 	}
 	roles, total, err := h.svc.List(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+	Success(c, gin.H{
 		"list":  roles,
 		"total": total,
 	})
@@ -85,52 +85,62 @@ func (h *RoleHandler) UpdateStatus(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req dto.UpdateRoleStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 	if err := h.svc.UpdateStatus(c.Request.Context(), uint(id), req.Status); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "状态更新成功"})
+	Success(c, nil)
+}
+
+func (h *RoleHandler) GetMenus(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	detail, err := h.svc.GetByID(c.Request.Context(), uint(id))
+	if err != nil {
+		_ = c.Error(err)
+		return
+	}
+	Success(c, detail.MenuIDs)
 }
 
 func (h *RoleHandler) AssignMenus(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req dto.AssignMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 	if err := h.svc.UpdateMenus(c.Request.Context(), uint(id), req.MenuIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "权限分配成功"})
+	Success(c, nil)
 }
 
 func (h *RoleHandler) AssignDepts(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req dto.AssignDeptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		_ = c.Error(errors.ErrBadRequest.WithMessage("参数校验失败: " + err.Error()))
 		return
 	}
 	if err := h.svc.UpdateDepts(c.Request.Context(), uint(id), req.DeptIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "数据范围分配成功"})
+	Success(c, nil)
 }
 
 func (h *RoleHandler) Copy(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	newID, err := h.svc.Copy(c.Request.Context(), uint(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"id": newID, "message": "复制成功"})
+	Success(c, gin.H{"id": newID})
 }
 
 func RegisterRoleRoutes(r *gin.RouterGroup, h *RoleHandler) {
@@ -142,6 +152,7 @@ func RegisterRoleRoutes(r *gin.RouterGroup, h *RoleHandler) {
 		roles.PUT("/:id", h.Update)
 		roles.DELETE("/:id", h.Delete)
 		roles.PUT("/:id/status", h.UpdateStatus)
+		roles.GET("/:id/menus", h.GetMenus)
 		roles.POST("/:id/menus", h.AssignMenus)
 		roles.POST("/:id/depts", h.AssignDepts)
 		roles.POST("/:id/copy", h.Copy)
