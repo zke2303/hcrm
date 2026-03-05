@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as LucideIcons from 'lucide-react';
 import { Edit3, Folder, Loader2, Menu as MenuIcon, MousePointer2, Plus, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -20,6 +21,18 @@ const menuSchema = z.object({
   visible: z.number().default(1),
   apiPath: z.string().optional().or(z.literal('')),
 });
+
+const COMMON_ICONS = [
+  'LayoutDashboard', 'Users', 'UserCog', 'Settings', 'Shield', 'Menu', 'List',
+  'FileText', 'Database', 'BarChart', 'Bell', 'Calendar', 'Clipboard', 'Folder',
+  'Home', 'Key', 'Lock', 'Mail', 'Search', 'Star', 'User', 'Activity', 'Book',
+  'Box', 'Briefcase', 'Camera', 'CheckCircle', 'Circle', 'Cloud', 'Code', 'Coffee',
+  'CreditCard', 'Download', 'Edit', 'Eye', 'Flag', 'Gift', 'Globe', 'Heart',
+  'Image', 'Inbox', 'Info', 'Layers', 'Link', 'Map', 'MessageSquare', 'Monitor',
+  'Package', 'Phone', 'PieChart', 'Plus', 'Printer', 'Radio', 'Save', 'Send',
+  'Share', 'ShoppingCart', 'Smartphone', 'Smile', 'Sun', 'Tag', 'Target', 'Trash',
+  'TrendingUp', 'Video', 'Wifi', 'Zap'
+];
 
 type MenuFormData = any;
 
@@ -190,17 +203,77 @@ const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) 
                    <input {...register('apiPath')} className="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all font-mono text-sm text-blue-700" placeholder="API 匹配路径，如：/api/v1/users/status" />
                 </div>
 
-                {menuType !== 2 && (
-                   <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">图标</label>
-                      <input {...register('icon')} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all" placeholder="Lucide 图标名，如：Users" />
-                   </div>
-                )}
-
                 <div className="space-y-2">
                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">排列顺序</label>
                    <input type="number" {...register('sortOrder', { valueAsNumber: true })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all" />
                 </div>
+
+                {menuType !== 2 && (
+                   <div className="space-y-2 col-span-2">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">菜单图标</label>
+                      <div className="relative group/icon-select">
+                        <div className="flex items-center gap-3">
+                           <div className="flex-1 relative">
+                              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                 {(() => {
+                                    const iconName = (watch('icon') as string) || '';
+                                    const IconComp = (LucideIcons as any)[iconName];
+                                    return IconComp ? <IconComp size={18} /> : <div className="w-[18px] h-[18px] border-2 border-dashed border-gray-200 rounded-sm" />;
+                                 })()}
+                              </div>
+                              <input 
+                                 {...register('icon')} 
+                                 className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all" 
+                                 placeholder="选择或输入图标名" 
+                                 autoComplete="off"
+                                 onFocus={(e) => {
+                                   const dropdown = e.currentTarget.nextElementSibling;
+                                   dropdown?.classList.remove('hidden');
+                                 }}
+                              />
+                              <div className="hidden absolute left-0 top-full mt-2 w-full max-h-64 overflow-y-auto bg-white border border-gray-100 rounded-2xl shadow-2xl z-[60] p-3 animate-in fade-in slide-in-from-top-2 duration-200"
+                                   onMouseDown={(e) => e.preventDefault()}>
+                                 <div className="grid grid-cols-8 gap-1.5">
+                                    {COMMON_ICONS.filter((name: string) => !watch('icon') || name.toLowerCase().includes(String(watch('icon')).toLowerCase())).map((iconName: string) => {
+                                       const IconRef = (LucideIcons as any)[iconName];
+                                       if (!IconRef) return null;
+                                       return (
+                                          <button
+                                             key={iconName}
+                                             type="button"
+                                             onClick={() => {
+                                                setValue('icon', iconName);
+                                                (document.activeElement as HTMLElement)?.blur();
+                                             }}
+                                             title={iconName}
+                                             className={`p-2.5 flex items-center justify-center rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 ${watch('icon') === iconName ? 'bg-blue-100 text-blue-700 shadow-sm ring-1 ring-blue-200' : 'text-gray-500'}`}
+                                          >
+                                             <IconRef size={20} />
+                                          </button>
+                                       );
+                                    })}
+                                    {COMMON_ICONS.filter((name: string) => !watch('icon') || name.toLowerCase().includes(String(watch('icon')).toLowerCase())).length === 0 && (
+                                       <div className="col-span-8 py-8 text-center text-gray-400">
+                                          <p className="text-xs">未找到匹配图标</p>
+                                       </div>
+                                    )}
+                                 </div>
+                              </div>
+                           </div>
+                           <div className="w-12 h-11 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 group-focus-within/icon-select:border-blue-200 group-focus-within/icon-select:bg-blue-50 transition-all">
+                              {(() => {
+                                 const iconName = (watch('icon') as string) || '';
+                                 const IconComp = (LucideIcons as any)[iconName];
+                                 return IconComp ? <IconComp size={22} className="text-blue-600" /> : <Plus size={20} />;
+                              })()}
+                           </div>
+                        </div>
+                        <style dangerouslySetInnerHTML={{ __html: `
+                           input:not(:focus) + div { display: none !important; }
+                        ` }} />
+                      </div>
+                   </div>
+                )}
 
                 <div className="flex items-center gap-8 py-2 col-span-2">
                    <label className="flex items-center gap-2 cursor-pointer group">
