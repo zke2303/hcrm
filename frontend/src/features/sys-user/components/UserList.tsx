@@ -139,14 +139,14 @@ const UserList: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ) : resp?.data?.list?.length === 0 ? (
+              ) : resp?.list?.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-20 text-center text-gray-500 text-sm">
                     暂无相关用户数据
                   </td>
                 </tr>
               ) : (
-                resp?.data?.list?.map(user => (
+                resp?.list?.map(user => (
                   <UserTableRow 
                     key={user.id}
                     user={user}
@@ -164,7 +164,7 @@ const UserList: React.FC = () => {
         
         <div className="px-4 py-3 bg-white border-t border-gray-200 flex items-center justify-between text-sm text-gray-600">
            <div>
-              共 <span className="font-semibold text-gray-900">{resp?.data?.total || 0}</span> 条数据
+              共 <span className="font-semibold text-gray-900">{resp?.total || 0}</span> 条数据
            </div>
            
            <div className="flex items-center gap-4">
@@ -191,11 +191,11 @@ const UserList: React.FC = () => {
                 </button>
                 
                 <span className="w-20 text-center">
-                  {params.page} / {Math.ceil((resp?.data?.total || 1) / params.pageSize)}
+                  {params.page} / {Math.ceil((resp?.total || 1) / params.pageSize)}
                 </span>
 
                 <button 
-                  disabled={!resp?.data || params.page * params.pageSize >= resp.data.total || isPending}
+                  disabled={!resp || params.page * params.pageSize >= resp.total || isPending}
                   onClick={() => handlePageChange(params.page + 1)}
                   className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

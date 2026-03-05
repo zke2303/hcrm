@@ -205,6 +205,7 @@ const MenuList: React.FC = () => {
 
       {dialogOpen && (
         <MenuDialog 
+          key={selectedMenu?.id ? `edit-${selectedMenu.id}` : parentMenu?.id ? `add-${parentMenu.id}` : 'new'}
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           menu={selectedMenu}

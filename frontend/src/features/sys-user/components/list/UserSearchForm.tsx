@@ -14,7 +14,7 @@ const UserSearchForm: React.FC<UserSearchFormProps> = ({ onSearch, initialParams
   const [title, setTitle] = useState(initialParams.title || '');
 
   const { data: titlesResp } = useTitles();
-  const titles = titlesResp?.data || [];
+  const titles = titlesResp || [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

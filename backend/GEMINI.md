@@ -258,16 +258,16 @@ Agent 不得：
 
 ---
 
-## 十一、测试规范
+<!-- ## 十一、测试规范
 
 - 所有 `service` 层方法必须有单元测试
 - 测试文件命名：`xxx_test.go`
 - 测试函数命名：`TestXxx_MethodName`
-- 使用 `testdata` 目录存放测试数据
+- 使用 `testdata` 目录存放测试数据 -->
 
 ---
 
-## Active Technologies
+## 十一、Active Technologies
 
 - Go 1.25+
 - Gin (HTTP)

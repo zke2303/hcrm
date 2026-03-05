@@ -1,3 +1,4 @@
+// Package service 业务逻辑层实现
 package service
 
 import (
@@ -221,9 +222,6 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 						return err
 					}
 				}
-			} else {
-				// 如果传了 false，且之前是医生，则更新状态或删除，这里可以简单的把状态置为离职，或者不处理。
-				// 当前按原有逻辑省略处理
 			}
 		}
 

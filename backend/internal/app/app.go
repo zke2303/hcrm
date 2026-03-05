@@ -1,3 +1,4 @@
+// Package app 核心初始化与路由注册
 package app
 
 import (

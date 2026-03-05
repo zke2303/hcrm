@@ -139,6 +139,11 @@ func (m *MockUserRepository) ClearMustChangePassword(ctx context.Context, userID
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) GetDataScope(ctx context.Context, userID uint) (int, []uint, error) {
+	args := m.Called(ctx, userID)
+	return args.Int(0), args.Get(1).([]uint), args.Error(2)
+}
+
 // MockDoctorRepository 医生仓储 Mock
 type MockDoctorRepository struct {
 	mock.Mock
@@ -225,7 +230,7 @@ func TestUserService_Create(t *testing.T) {
 	userRepo.On("GetByPhone", ctx, req.Phone).Return((*model.User)(nil), gorm.ErrRecordNotFound)
 	userRepo.On("Create", ctx, mock.AnythingOfType("*model.User")).Return(nil)
 
-	err := svc.Create(ctx, req)
+	_, err := svc.Create(ctx, req)
 
 	assert.Nil(t, err)
 	userRepo.AssertExpectations(t)

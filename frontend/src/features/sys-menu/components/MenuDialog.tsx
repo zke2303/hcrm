@@ -30,6 +30,11 @@ interface MenuDialogProps {
   parent?: Menu | null; // 添加子菜单模式
 }
 
+const nodeAsNumber = (val: any) => {
+  const n = Number(val);
+  return isNaN(n) ? 0 : n;
+};
+
 const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) => {
   const isEdit = !!menu;
   const createMenu = useCreateMenu();
@@ -58,6 +63,8 @@ const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) 
   const menuType = watch('type');
 
   useEffect(() => {
+    if (!open) return;
+
     if (menu) {
       reset({
         parentId: menu.parentId,
@@ -76,7 +83,7 @@ const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) 
       reset({
         parentId: parent.id,
         name: '',
-        type: parent.type === 0 ? 1 : 2, // 目录下默认菜单，菜单下默认按钮
+        type: parent.type === 0 ? 1 : 2,
         sortOrder: 0,
         status: 1,
         visible: 1,
@@ -91,12 +98,7 @@ const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) 
         visible: 1,
       });
     }
-  }, [menu, parent, reset, open]);
-
-  const nodeAsNumber = (val: any) => {
-    const n = Number(val);
-    return isNaN(n) ? 0 : n;
-  }
+  }, [open, menu, parent, reset]);
 
   const onSubmit = async (data: MenuFormData) => {
     try {
@@ -135,25 +137,28 @@ const MenuDialog: React.FC<MenuDialogProps> = ({ open, onClose, menu, parent }) 
 
           <form onSubmit={handleSubmit(onSubmit)} className="p-6">
              <div className="grid grid-cols-2 gap-5">
-                <div className="col-span-2 flex items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                   <div className="flex items-center gap-2 flex-1">
-                      <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 0 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
-                         <input type="radio" value={0} {...register('type', { valueAsNumber: true })} className="hidden" />
-                         <Folder size={18} />
-                         <span>目录</span>
-                      </label>
-                      <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 1 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
-                         <input type="radio" value={1} {...register('type', { valueAsNumber: true })} className="hidden" />
-                         <MenuIcon size={18} />
-                         <span>菜单</span>
-                      </label>
-                      <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 2 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
-                         <input type="radio" value={2} {...register('type', { valueAsNumber: true })} className="hidden" />
-                         <MousePointer2 size={18} />
-                         <span>按钮</span>
-                      </label>
-                   </div>
-                </div>
+                 <div className="col-span-2 flex items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-2 flex-1">
+                       <div 
+                          onClick={() => setValue('type', 0)}
+                          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 0 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
+                          <Folder size={18} />
+                          <span>目录</span>
+                       </div>
+                       <div 
+                          onClick={() => setValue('type', 1)}
+                          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 1 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
+                          <MenuIcon size={18} />
+                          <span>菜单</span>
+                       </div>
+                       <div 
+                          onClick={() => setValue('type', 2)}
+                          className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer select-none ${menuType === 2 ? 'bg-white border-blue-500 shadow-lg text-blue-700 font-bold' : 'border-dashed border-gray-200 text-gray-400 grayscale hover:grayscale-0 hover:border-blue-100'}`}>
+                          <MousePointer2 size={18} />
+                          <span>按钮</span>
+                       </div>
+                    </div>
+                 </div>
 
                 <div className="space-y-2 col-span-2">
                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">资源名称 <span className="text-red-500">*</span></label>
