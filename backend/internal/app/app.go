@@ -15,24 +15,30 @@ import (
 	"hcrm/backend/internal/handler"
 	"hcrm/backend/internal/middleware"
 	"hcrm/backend/internal/pkg/auth"
+	"hcrm/backend/internal/repository"
+	"hcrm/backend/internal/service"
 )
 
 // App 应用结构
 type App struct {
-	router *gin.Engine
-	config *config.Config
-	logger *zap.Logger
-	db     *gorm.DB
-	redis  *redis.Client
-	server *http.Server
+	router  *gin.Engine
+	config  *config.Config
+	logger  *zap.Logger
+	db      *gorm.DB
+	redis   *redis.Client
+	server  *http.Server
+	authSvc service.AuthService
 
 	// Handlers
 	healthHandler *handler.HealthHandler
 	authHandler   *handler.AuthHandler
 	userHandler   *handler.UserHandler
+	roleHandler   *handler.RoleHandler
+	menuHandler   *handler.MenuHandler
 
 	// Middleware components
-	jwt *auth.JWTHelper
+	jwt     *auth.JWTHelper
+	logRepo repository.OperationLogRepository
 }
 
 // New 创建应用实例
@@ -44,6 +50,10 @@ func New(
 	healthHandler *handler.HealthHandler,
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
+	roleHandler *handler.RoleHandler,
+	menuHandler *handler.MenuHandler,
+	authSvc service.AuthService,
+	logRepo repository.OperationLogRepository,
 	jwt *auth.JWTHelper,
 ) *App {
 	// 设置 Gin 模式
@@ -61,6 +71,10 @@ func New(
 		healthHandler: healthHandler,
 		authHandler:   authHandler,
 		userHandler:   userHandler,
+		roleHandler:   roleHandler,
+		menuHandler:   menuHandler,
+		authSvc:       authSvc,
+		logRepo:       logRepo,
 		jwt:           jwt,
 	}
 
@@ -94,8 +108,13 @@ func (a *App) registerRoutes() {
 	// 受保护路由组（需要认证）
 	protected := a.router.Group("/api")
 	protected.Use(middleware.Auth(a.jwt))
+	protected.Use(middleware.AuditLog(a.logRepo))
+	protected.Use(middleware.Permission(a.authSvc))
+	protected.Use(middleware.DataScope(a.authSvc))
 	{
 		handler.RegisterUserRoutes(protected, a.userHandler)
+		handler.RegisterRoleRoutes(protected, a.roleHandler)
+		handler.RegisterMenuRoutes(protected, a.menuHandler)
 	}
 }
 

@@ -45,6 +45,7 @@ func Auth(jwt *auth.JWTHelper) gin.HandlerFunc {
 		// 将用户信息存入上下文
 		c.Set("userID", claims.UserID)
 		c.Set("username", claims.Username)
+		c.Set("departmentID", claims.DepartmentID)
 		c.Next()
 	}
 }

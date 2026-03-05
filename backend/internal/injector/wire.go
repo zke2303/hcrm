@@ -3,8 +3,6 @@
 package injector
 
 import (
-	"github.com/google/wire"
-
 	"hcrm/backend/internal/app"
 	"hcrm/backend/internal/config"
 	"hcrm/backend/internal/handler"
@@ -13,6 +11,8 @@ import (
 	"hcrm/backend/internal/pkg/logger"
 	"hcrm/backend/internal/repository"
 	"hcrm/backend/internal/service"
+
+	"github.com/google/wire"
 )
 
 // BuildApp 构建应用（由 Wire 生成实现）
@@ -38,16 +38,22 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		repository.NewUserRepository,
 		repository.NewDoctorRepository,
 		repository.NewDepartmentRepository,
+		repository.NewRoleRepository,
+		repository.NewMenuRepository,
 		repository.NewOperationLogRepository,
 		repository.NewTitleRepository,
 		// 服务层
 		service.NewHealthService,
 		service.NewAuthService,
 		service.NewUserService,
+		service.NewRoleService,
+		service.NewMenuService,
 		// 处理器层
 		handler.NewHealthHandler,
 		handler.NewAuthHandler,
 		handler.NewUserHandler,
+		handler.NewRoleHandler,
+		handler.NewMenuHandler,
 		// 应用
 		app.New,
 	)

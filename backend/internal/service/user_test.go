@@ -98,6 +98,14 @@ func (m *MockUserRepository) GetRolesAndPermissions(ctx context.Context, userID 
 	return args.Get(0).([]string), args.Get(1).([]string), args.Error(2)
 }
 
+func (m *MockUserRepository) GetMenusByUserID(ctx context.Context, userID uint) ([]*model.Menu, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*model.Menu), args.Error(1)
+}
+
 func (m *MockUserRepository) GetDoctorByUserID(ctx context.Context, userID uint) (*model.Doctor, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
