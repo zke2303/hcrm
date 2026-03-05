@@ -5,25 +5,34 @@ import (
 	"hcrm/backend/internal/schema/vo"
 )
 
-// RoleToVO 角色实体转为 VO
-func RoleToVO(m *model.Role) *vo.RoleVO {
-	if m == nil {
+func RoleToVO(role *model.Role) *vo.RoleVO {
+	if role == nil {
 		return nil
 	}
 	return &vo.RoleVO{
-		ID:          m.ID,
-		Name:        m.Name,
-		Description: m.Description,
-		IsSystem:    m.IsSystem,
-		CreatedAt:   m.CreatedAt,
+		ID:          role.ID,
+		Name:        role.Name,
+		Code:        role.Code,
+		Description: role.Description,
+		DataScope:   role.DataScope,
+		Status:      role.Status,
+		IsSystem:    role.IsSystem,
+		CreatedAt:   role.CreatedAt,
 	}
 }
 
-// RoleListToVO 角色列表实体转为 VO 列表
-func RoleListToVO(list []model.Role) []*vo.RoleVO {
-	res := make([]*vo.RoleVO, len(list))
-	for i, m := range list {
-		res[i] = RoleToVO(&m)
+func RoleListToVO(roles []model.Role) []*vo.RoleVO {
+	res := make([]*vo.RoleVO, len(roles))
+	for i, role := range roles {
+		res[i] = RoleToVO(&role)
+	}
+	return res
+}
+
+func RolePtrListToVO(roles []*model.Role) []*vo.RoleVO {
+	res := make([]*vo.RoleVO, len(roles))
+	for i, role := range roles {
+		res[i] = RoleToVO(role)
 	}
 	return res
 }

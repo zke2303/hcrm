@@ -44,6 +44,7 @@ type ListUserRequest struct {
 	RealName     string `form:"realName"`
 	Phone        string `form:"phone"`
 	DepartmentID *uint  `form:"departmentId"`
+	RoleID       *uint  `form:"roleId"`
 	Status       *int8  `form:"status"`
 	Title        string `form:"title"`
 }
