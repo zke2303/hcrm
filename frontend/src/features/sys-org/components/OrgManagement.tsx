@@ -18,9 +18,9 @@ const OrgManagement: React.FC = () => {
   };
 
   return (
-    <div className="m-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-120px)]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-160px)] min-h-[600px]">
       {/* Standard Header */}
-      <div className="flex justify-between items-center mb-6 px-2">
+      <div className="flex justify-between items-center mb-6 px-6 pt-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">组织架构管理</h1>
           <p className="text-sm text-gray-500 mt-1">维护医院组织树、科室设置及各科室人员归属分配</p>
@@ -37,11 +37,11 @@ const OrgManagement: React.FC = () => {
       </div>
 
       {/* Main Content Area with Split Panels */}
-      <div className="flex-1 overflow-hidden border border-gray-200 rounded-lg shadow-sm">
+      <div className="flex-1 overflow-hidden border-t border-gray-100">
         <PanelGroup orientation="horizontal">
           <Panel defaultSize={25} minSize={20} className="bg-gray-50/30">
-            <div className="h-full flex flex-col">
-              <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/50">
+            <div className="h-full flex flex-col border-r border-gray-100">
+              <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/50 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
                     <Users size={16} />
@@ -58,7 +58,9 @@ const OrgManagement: React.FC = () => {
             </div>
           </Panel>
 
-          <PanelResizeHandle className="w-1 bg-gray-100 hover:bg-blue-200 transition-colors cursor-col-resize" />
+          <PanelResizeHandle className="w-1 bg-gray-50 hover:bg-blue-200 transition-colors cursor-col-resize relative">
+             <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gray-200" />
+          </PanelResizeHandle>
 
           <Panel defaultSize={75}>
             <div className="h-full flex flex-col bg-white overflow-hidden">
