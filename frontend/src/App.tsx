@@ -4,14 +4,15 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import AuthGuard from './components/Auth/AuthGuard';
 import { HasPermission } from './components/Auth/HasPermission';
-import UserList from './features/sys-user/components/UserList';
-import RoleList from './features/sys-role/components/RoleList';
-import MenuList from './features/sys-menu/components/MenuList';
-import OrgPage from './pages/Org/OrgPage';
-import MainLayout from './layouts/MainLayout';
-import Login from './pages/Login/Login';
 import { ConfirmProvider } from './components/common/ConfirmContext';
 import { MessageProvider } from './components/common/MessageContext';
+import DoctorList from './features/doctors/components/DoctorList';
+import MenuList from './features/sys-menu/components/MenuList';
+import RoleList from './features/sys-role/components/RoleList';
+import UserList from './features/sys-user/components/UserList';
+import MainLayout from './layouts/MainLayout';
+import Login from './pages/Login/Login';
+import OrgPage from './pages/Org/OrgPage';
 import { useAuthStore } from './store/useAuthStore';
 
 const queryClient = new QueryClient({
@@ -64,6 +65,7 @@ const App: React.FC = () => {
                 {/* 系统管理 */}
                 <Route path="system">
                   <Route path="user" element={<UserList />} />
+                  <Route path="doctor" element={<DoctorList />} />
                   <Route path="role" element={<RoleList />} />
                   <Route path="menu" element={<MenuList />} />
                   <Route path="org" element={<OrgPage />} />
