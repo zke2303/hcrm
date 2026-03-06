@@ -127,12 +127,6 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
                       </div>
                     </div>
 
-                    <div className="absolute top-4 right-4">
-                      <div className="px-2 py-0.5 bg-gray-50 text-gray-400 rounded-lg text-[10px] font-mono font-bold border border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-500 group-hover:border-blue-100 transition-all">
-                        #{staff.employeeNo}
-                      </div>
-                    </div>
-
                     <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
                         <BadgeCheck size={12} className="text-emerald-500" />
