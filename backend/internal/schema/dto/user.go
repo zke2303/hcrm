@@ -22,18 +22,18 @@ type CreateUserRequest struct {
 type UpdateUserRequest struct {
 	RealName     string  `json:"realName" binding:"required"`
 	Phone        string  `json:"phone" binding:"required,len=11"`
-	Email        string  `json:"email" binding:"omitempty,email"`
+	Email        *string `json:"email" binding:"omitempty,email"`
 	EmployeeNo   string  `json:"employeeNo"`
 	DepartmentID *uint   `json:"departmentId"`
-	Remark       string  `json:"remark"`
+	Remark       *string `json:"remark"`
 	Status       *int8   `json:"status"` // 0-禁用, 1-启用
 	RoleIDs      *[]uint `json:"roleIds"`
 
 	// 联动医生档案字段
-	IsDoctor     *bool  `json:"isDoctor"`
-	Title        string `json:"title"`
-	Specialty    string `json:"specialty"`
-	Introduction string `json:"introduction"`
+	IsDoctor     *bool   `json:"isDoctor"`
+	Title        *string `json:"title"`
+	Specialty    *string `json:"specialty"`
+	Introduction *string `json:"introduction"`
 }
 
 // ListUserRequest 用户列表查询请求

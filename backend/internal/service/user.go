@@ -172,19 +172,23 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 
 	user.RealName = req.RealName
 	user.Phone = req.Phone
-	user.Email = req.Email
+	if req.Email != nil {
+		user.Email = *req.Email
+	}
 	user.DepartmentID = req.DepartmentID
-	user.Remark = req.Remark
+	if req.Remark != nil {
+		user.Remark = *req.Remark
+	}
 	if req.Status != nil {
-	        user.Status = *req.Status
+		user.Status = *req.Status
 	}
 
 	// 特殊处理：防止工号被清空 (如果前端没传，则保留旧值)
 	if req.EmployeeNo != "" {
-	        user.EmployeeNo = req.EmployeeNo
+		user.EmployeeNo = req.EmployeeNo
 	}
 
-	return s.userRepo.Transaction(ctx, func(txCtx context.Context) error {		// 1. 更新用户
+	return s.userRepo.Transaction(ctx, func(txCtx context.Context) error { // 1. 更新用户
 		if err := s.userRepo.Update(txCtx, user); err != nil {
 			return err
 		}
@@ -212,9 +216,15 @@ func (s *userService) Update(ctx context.Context, id uint, req *dto.UpdateUserRe
 				doctor.RealName = user.RealName
 				doctor.Phone = user.Phone
 				doctor.EmployeeNo = user.EmployeeNo
-				doctor.Title = req.Title
-				doctor.Specialty = req.Specialty
-				doctor.Introduction = req.Introduction
+				if req.Title != nil {
+					doctor.Title = *req.Title
+				}
+				if req.Specialty != nil {
+					doctor.Specialty = *req.Specialty
+				}
+				if req.Introduction != nil {
+					doctor.Introduction = *req.Introduction
+				}
 
 				if doctor.ID == 0 {
 					if err := s.doctorRepo.Create(txCtx, doctor); err != nil {

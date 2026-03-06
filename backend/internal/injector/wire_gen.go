@@ -63,7 +63,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 	menuRepository := repository.NewMenuRepository(db)
 	menuService := service.NewMenuService(menuRepository)
 	menuHandler := handler.NewMenuHandler(menuService)
-	departmentService := service.NewDepartmentService(departmentRepository, doctorRepository)
+	departmentService := service.NewDepartmentService(departmentRepository, doctorRepository, userRepository)
 	departmentHandler := handler.NewDepartmentHandler(departmentService)
 	doctorService := service.NewDoctorService(doctorRepository, userRepository, departmentRepository, roleRepository)
 	doctorHandler := handler.NewDoctorHandler(doctorService)

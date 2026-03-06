@@ -195,6 +195,31 @@ func (m *MockDoctorRepository) FindInDepartments(ctx context.Context, deptIDs []
 	return args.Get(0).(map[uint][]*model.Doctor), args.Error(1)
 }
 
+func (m *MockDoctorRepository) GetByID(ctx context.Context, id uint) (*model.Doctor, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Doctor), args.Error(1)
+}
+
+func (m *MockDoctorRepository) GetByPhone(ctx context.Context, phone string) (*model.Doctor, error) {
+	args := m.Called(ctx, phone)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Doctor), args.Error(1)
+}
+
+func (m *MockDoctorRepository) List(ctx context.Context, req *dto.ListDoctorRequest) ([]*model.Doctor, int64, error) {
+	args := m.Called(ctx, req)
+	return args.Get(0).([]*model.Doctor), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockDoctorRepository) Transaction(ctx context.Context, fn func(txCtx context.Context) error) error {
+	return fn(ctx)
+}
+
 func (m *MockDoctorRepository) RemoveFromDepartment(ctx context.Context, doctorID uint, deptID uint) error {
 	args := m.Called(ctx, doctorID, deptID)
 	return args.Error(0)

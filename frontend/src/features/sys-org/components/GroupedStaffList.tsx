@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { User, Mail, Phone, BadgeCheck, Stethoscope, Loader2, Hospital, Search, RotateCcw } from 'lucide-react';
 import { useStaffList } from '../hooks/useOrg';
+import UserDialog from '../../sys-user/components/UserDialog';
+import type { UserVO } from '../types';
 
 interface GroupedStaffListProps {
   deptId?: number;
@@ -9,9 +11,16 @@ interface GroupedStaffListProps {
 const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
   const { data: groups, isLoading } = useStaffList(deptId);
   const [keyword, setKeyword] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserVO | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleReset = () => {
     setKeyword('');
+  };
+
+  const handleCardClick = (staff: UserVO) => {
+    setSelectedUser(staff);
+    setDialogOpen(true);
   };
 
   if (isLoading) {
@@ -23,7 +32,6 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
     );
   }
 
-  // Filter staff based on keyword locally for responsiveness
   const filteredGroups = groups?.map(group => ({
     ...group,
     staff: group.staff.filter(s => 
@@ -35,7 +43,6 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Internal Search Area matching the system standard */}
       <div className="bg-gray-50/50 p-6 border-b border-gray-100 shadow-sm">
         <form className="flex flex-wrap items-end gap-6" onSubmit={(e) => e.preventDefault()}>
           <div className="flex flex-col gap-2 flex-1 min-w-[300px]">
@@ -72,7 +79,6 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
         </form>
       </div>
 
-      {/* Staff List Area */}
       <div className="flex-1 overflow-auto p-6 space-y-10 bg-white">
         {filteredGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-40">
@@ -94,7 +100,8 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
                 {group.staff.map((staff) => (
                   <div 
                     key={staff.id} 
-                    className="group relative bg-white border border-gray-100 rounded-2xl p-5 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300"
+                    onClick={() => handleCardClick(staff)}
+                    className="group relative bg-white border border-gray-100 rounded-2xl p-5 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 cursor-pointer active:scale-[0.98]"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
@@ -102,7 +109,7 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-base font-bold text-gray-900 truncate">{staff.realName}</h4>
+                          <h4 className="text-base font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{staff.realName}</h4>
                           {staff.isDoctor && (
                             <div className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-black tracking-tighter uppercase border border-emerald-100">
                               DOCTOR
@@ -132,9 +139,9 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
                         <BadgeCheck size={12} className="text-emerald-500" />
                         账号已启用
                       </div>
-                      <button className="text-[10px] font-black text-blue-600 hover:text-blue-700 transition uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full group-hover:bg-blue-100">
-                        控制台
-                      </button>
+                      <span className="text-[10px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        点击管理档案
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -143,6 +150,13 @@ const GroupedStaffList: React.FC<GroupedStaffListProps> = ({ deptId }) => {
           ))
         )}
       </div>
+
+      <UserDialog 
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        user={selectedUser as any}
+        hideAccountSection={true}
+      />
     </div>
   );
 };

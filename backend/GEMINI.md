@@ -267,7 +267,27 @@ Agent 不得：
 
 ---
 
-## 十一、Active Technologies
+## 十二、更新操作规范
+
+为平衡性能与安全，后端更新操作必须遵循以下原则：
+
+1.  **先查后改 (Fetch-then-Update)**：
+    - **适用场景**：需要对更新内容进行复杂业务校验，或逻辑依赖于当前数据库状态。
+    - **流程**：先调用 Repository 的 `GetByID` 获取 Model，在 Service 层修改字段，最后调用 `Update` 保存。
+    - **优点**：最安全，逻辑清晰，适合核心业务。
+
+2.  **DTO 指针 + Map 更新 (Map-based Update)**：
+    - **适用场景**：简单字段更新，且需要支持“零值更新”（如将布尔值设为 false、数字设为 0、字符串设为空）。
+    - **方式**：Repository 层暴露 `UpdateMap` 方法，Service 层将接收到的 DTO 指针（区分未传与零值）转换为 `map[string]interface{}` 进行更新。
+    - **优点**：性能高，避免 GORM `Updates` 结构体模式下忽略零值的坑。
+
+3.  **禁止事项**：
+    - 禁止直接将未经校验的 DTO 转换为 Model 并调用 `Save`（可能导致字段被意外重置为默认值）。
+    - 禁止在 Repository 层逻辑之外拼凑 SQL 或直接操作数据库。
+
+---
+
+## 十三、Active Technologies
 
 - Go 1.25+
 - Gin (HTTP)

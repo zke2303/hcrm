@@ -1,20 +1,23 @@
+import { useMessage } from '@/components/common/MessageContext';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Edit3, Loader2, Plus, X, User as UserIcon, ShieldCheck, Stethoscope, Mail, Phone, Info } from 'lucide-react';
+import { Info, Loader2, Lock, Mail, Phone, Plus, ShieldCheck, Stethoscope, User as UserIcon, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useMessage } from '@/components/common/MessageContext';
-import { useCreateUser, useDepartments, useTitles, useUpdateUser } from '../hooks/useUsers';
+import { useCreateUser, useDepartments, useTitles, useUpdateUser, useUser } from '../hooks/useUsers';
 import type { User as UserType } from '../types';
 
 const userSchema = z.object({
-  username: z.string().min(3, '账号至少3个字符'),
+  username: z.string().optional(),
   realName: z.string().min(2, '请输入真实姓名'),
   phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入正确的手机号'),
   email: z.string().email('请输入有效的邮箱').optional().or(z.literal('')),
+  employeeNo: z.string().optional(),
   departmentId: z.number().optional().nullable(),
   remark: z.string().optional(),
-  isDoctor: z.boolean(),
+  status: z.number().default(1),
+  roleIds: z.array(z.number()).default([]),
+  isDoctor: z.boolean().default(false),
   title: z.string().optional(),
   specialty: z.string().optional(),
   introduction: z.string().optional(),
@@ -27,10 +30,15 @@ interface UserDialogProps {
   onClose: () => void;
   user?: UserType | null;
   defaultDeptId?: number;
+  hideAccountSection?: boolean;
 }
 
-const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDeptId }) => {
+const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDeptId, hideAccountSection = false }) => {
   const isEdit = !!user;
+  
+  // 确保在弹窗打开且处于编辑模式时获取数据
+  const { data: fullUser, isFetching } = useUser(user?.id || 0, open && isEdit);
+  
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const message = useMessage();
@@ -44,7 +52,6 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
     handleSubmit,
     reset,
     watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -52,63 +59,69 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
       username: '',
       realName: '',
       phone: '',
+      status: 1,
+      roleIds: [],
       isDoctor: false,
     },
   });
 
   const isDoctor = watch('isDoctor');
 
+  // 精简逻辑：监听 open 和 fullUser 的变化来同步表单
   useEffect(() => {
-    if (open) {
-      if (user) {
+    if (!open) return;
+
+    if (isEdit) {
+      // 优先从详情接口获取最新数据，如果没有则使用基础列表传入的数据兜底
+      const data = fullUser || user;
+      if (data) {
         reset({
-          username: user.username,
-          realName: user.realName,
-          phone: user.phone,
-          email: user.email || '',
-          departmentId: user.departmentId,
-          remark: user.remark || '',
-          isDoctor: user.isDoctor || false,
-          title: user.title || '',
-          specialty: user.specialty || '',
-          introduction: user.introduction || '',
-        });
-      } else {
-        reset({
-          username: '',
-          realName: '',
-          phone: '',
-          email: '',
-          departmentId: defaultDeptId || null,
-          isDoctor: false,
+          username: data.username || '',
+          realName: data.realName || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          employeeNo: data.employeeNo || '',
+          departmentId: data.departmentId,
+          remark: 'remark' in data ? (data as any).remark || '' : '',
+          status: data.status,
+          roleIds: 'roles' in data ? (data as any).roles?.map((r: any) => r.id) || [] : [],
+          isDoctor: data.isDoctor || false,
+          title: data.title || '',
+          specialty: data.specialty || '',
+          introduction: data.introduction || '',
         });
       }
+    } else {
+      reset({
+        username: '',
+        realName: '',
+        phone: '',
+        email: '',
+        employeeNo: '',
+        departmentId: defaultDeptId || null,
+        status: 1,
+        roleIds: [],
+        isDoctor: false,
+        title: '',
+        specialty: '',
+        introduction: '',
+      });
     }
-  }, [user, reset, open, defaultDeptId]);
+  }, [open, isEdit, fullUser, user, reset, defaultDeptId]);
 
   const onSubmit = async (data: UserFormData) => {
     try {
-      if (isEdit) {
-        const updateData: any = {
-          ...data,
-          employeeNo: user!.employeeNo,
-        };
-        await updateUser.mutateAsync({ id: user!.id, data: updateData });
-        message.success('用户信息更新成功');
+      if (isEdit && user) {
+        await updateUser.mutateAsync({ id: user.id, data: data as any });
+        message.success('更新成功');
+        onClose();
       } else {
-        const resp = await createUser.mutateAsync(data as any);
-        const result = resp as any;
-        if (result && result.employeeNo) {
-          message.success(
-            `新增用户成功！工号: ${result.employeeNo}，默认密码: 123456。`
-          );
-        } else {
-          message.success('新增用户成功');
-        }
+        await createUser.mutateAsync(data as any);
+        message.success('创建成功');
+        onClose();
       }
-      onClose();
     } catch (err: any) {
-      message.error(err.response?.data?.message || '操作失败，请稍后重试');
+      message.error(err.response?.data?.message || '操作失败');
     }
   };
 
@@ -119,15 +132,25 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
       <div className="fixed inset-0 bg-gray-900/60 transition-opacity backdrop-blur-sm" onClick={onClose} />
       
       <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* 精简后的加载遮罩：仅在数据真正获取中时显示 */}
+        {isEdit && isFetching && !fullUser && (
+          <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 text-blue-600">
+            <Loader2 className="animate-spin" size={48} />
+            <p className="text-sm font-black tracking-widest uppercase">Fetching Profile...</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-xl text-white shadow-lg ${isEdit ? 'bg-blue-600 shadow-blue-200' : 'bg-emerald-600 shadow-emerald-200'}`}>
-              {isEdit ? <Edit3 size={24} /> : <Plus size={24} />}
+              {isEdit ? <UserIcon size={24} /> : <Plus size={24} />}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">{isEdit ? '编辑系统用户' : '新建系统用户'}</h3>
-              <p className="text-sm text-gray-500 font-medium">配置账号登录凭证、人员基本信息及科室归属</p>
+              <h3 className="text-xl font-bold text-gray-900">{isEdit ? '编辑人员资料' : '新增人员'}</h3>
+              <p className="text-sm text-gray-500 font-medium">
+                {isEdit ? `工号: ${watch('employeeNo') || '-'}` : '录入新的人员基础信息及临床档案'}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
@@ -139,37 +162,38 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-8 md:p-10">
           <div className="space-y-10">
             {/* Section: Account Info */}
-            <section>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
-                <h4 className="text-base font-bold text-gray-900 tracking-tight">账号登录信息</h4>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <UserIcon size={14} className="text-gray-400" />
-                    登录账号 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    {...register('username')}
-                    disabled={isEdit}
-                    placeholder="请输入登录名 (建议使用姓名拼音)"
-                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.username ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all ${isEdit ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
-                  />
-                  {errors.username && <p className="text-xs text-red-500 mt-1 font-medium">{errors.username.message}</p>}
+            {!hideAccountSection && (
+              <section>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
+                  <h4 className="text-base font-bold text-gray-900 tracking-tight">账号登录信息</h4>
                 </div>
-
-                {!isEdit && (
-                  <div className="md:col-span-2 p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3">
-                    <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                    <div className="text-xs text-amber-700 leading-relaxed font-medium">
-                      工号将由系统自动分配（EMP + 序列号），初始默认登录密码为 <span className="bg-amber-100 px-1.5 py-0.5 rounded font-bold border border-amber-200 text-amber-900 mx-1">123456</span>，请在创建成功后通知用户及时修改。
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Lock size={14} className="text-gray-400" />
+                      登录账号 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...register('username')}
+                      disabled={isEdit}
+                      placeholder="请输入登录名"
+                      className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.username ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all ${isEdit ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
+                    />
+                    {errors.username && <p className="text-xs text-red-500 mt-1 font-medium">{errors.username.message}</p>}
                   </div>
-                )}
-              </div>
-            </section>
+                  
+                  {!isEdit && (
+                    <div className="md:col-span-2 p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3">
+                      <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-700 leading-relaxed font-medium">
+                        工号由系统自动分配，初始默认密码为 <span className="font-bold underline">123456</span>。
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* Section: Profile Info */}
             <section>
@@ -183,7 +207,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                   <label className="text-sm font-semibold text-gray-700">真实姓名 <span className="text-red-500">*</span></label>
                   <input
                     {...register('realName')}
-                    placeholder="请输入人员法定姓名"
+                    placeholder="人员法定姓名"
                     className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.realName ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all`}
                   />
                   {errors.realName && <p className="text-xs text-red-500 mt-1 font-medium">{errors.realName.message}</p>}
@@ -196,7 +220,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                   </label>
                   <input
                     {...register('phone')}
-                    placeholder="请输入11位手机号"
+                    placeholder="11位手机号"
                     className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all`}
                   />
                   {errors.phone && <p className="text-xs text-red-500 mt-1 font-medium">{errors.phone.message}</p>}
@@ -225,14 +249,14 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                   </label>
                   <input
                     {...register('email')}
-                    placeholder="用于接收系统通知 (选填)"
+                    placeholder="选填"
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all"
                   />
                 </div>
               </div>
             </section>
 
-            {/* Section: Doctor Toggle */}
+            {/* Section: Doctor Toggle & Info */}
             <section>
               <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
@@ -241,13 +265,13 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                       <Stethoscope size={20} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-gray-900 tracking-tight">医务人员标记</h4>
-                      <p className="text-[11px] text-blue-600 font-bold opacity-70">开启后将同步建立医生临床档案</p>
+                      <h4 className="text-sm font-bold text-gray-900 tracking-tight">医务人员身份</h4>
+                      <p className="text-[11px] text-blue-600 font-bold opacity-70">开启后将同步临床档案</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" {...register('isDoctor')} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
@@ -269,7 +293,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                       <label className="text-sm font-semibold text-gray-700">专业特长</label>
                       <input
                         {...register('specialty')}
-                        placeholder="如: 介入心脏病学"
+                        placeholder="临床专业方向"
                         className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
                       />
                     </div>
@@ -278,7 +302,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
                       <textarea
                         {...register('introduction')}
                         rows={3}
-                        placeholder="请简要介绍医生的教育背景、科研成果等..."
+                        placeholder="请简要介绍医生的专业背景、擅长领域等..."
                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all resize-none shadow-inner"
                       />
                     </div>
@@ -291,17 +315,13 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
 
         {/* Action Buttons */}
         <div className="px-8 py-6 border-t border-gray-100 flex justify-end gap-4 bg-gray-50/30">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm"
-          >
+          <button type="button" onClick={onClose} className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all active:scale-95 shadow-sm">
             取消
           </button>
           <button
             type="submit"
             onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || (isEdit && isFetching && !fullUser)}
             className={`
               flex items-center justify-center min-w-[120px] gap-2 px-8 py-2.5 text-white text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md
               ${isEdit 
@@ -312,7 +332,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDep
             `}
           >
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : null}
-            {isSubmitting ? '正在提交...' : (isEdit ? '保存更改' : '创建用户')}
+            {isSubmitting ? '正在提交...' : (isEdit ? '保存更改' : '立即创建')}
           </button>
         </div>
       </div>

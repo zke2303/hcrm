@@ -166,9 +166,15 @@ func (s *doctorService) Update(ctx context.Context, id uint, req *dto.UpdateDoct
 	doctor.Phone = req.Phone
 	doctor.EmployeeNo = req.EmployeeNo
 	doctor.Title = req.Title
-	doctor.Specialty = req.Specialty
-	doctor.Introduction = req.Introduction
-	doctor.AvatarURL = req.AvatarURL
+	if req.Introduction != nil {
+		doctor.Introduction = *req.Introduction
+	}
+	if req.Specialty != nil {
+		doctor.Specialty = *req.Specialty
+	}
+	if req.AvatarURL != nil {
+		doctor.AvatarURL = *req.AvatarURL
+	}
 	if req.Status != nil {
 		doctor.Status = *req.Status
 	}

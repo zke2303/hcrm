@@ -25,16 +25,19 @@ type DepartmentService interface {
 type departmentService struct {
 	deptRepo   repository.DepartmentRepository
 	doctorRepo repository.DoctorRepository
+	userRepo   repository.UserRepository
 }
 
 // NewDepartmentService 创建科室服务
 func NewDepartmentService(
 	deptRepo repository.DepartmentRepository,
 	doctorRepo repository.DoctorRepository,
+	userRepo repository.UserRepository,
 ) DepartmentService {
 	return &departmentService{
 		deptRepo:   deptRepo,
 		doctorRepo: doctorRepo,
+		userRepo:   userRepo,
 	}
 }
 
@@ -66,7 +69,28 @@ func (s *departmentService) GetStaffByDeptRecursive(ctx context.Context, deptID 
 		return nil, err
 	}
 
-	// 4. 按科室分组封装 VO
+	// 4. 获取对应的 User 信息（用于获取 EmployeeNo 和真正的 ID）
+	userIDs := make([]uint, 0)
+	for _, doctorsList := range deptDoctors {
+		for _, d := range doctorsList {
+			if d.UserID != nil {
+				userIDs = append(userIDs, *d.UserID)
+			}
+		}
+	}
+
+	userMap := make(map[uint]*model.User)
+	if len(userIDs) > 0 {
+		// 实际上由于项目规范，我们应该批量获取。先用一个循环演示逻辑，后续可优化 Repo
+		for _, uID := range userIDs {
+			u, _ := s.userRepo.GetByID(ctx, uID)
+			if u != nil {
+				userMap[u.ID] = u
+			}
+		}
+	}
+
+	// 5. 按科室分组封装 VO
 	var res []*vo.DepartmentStaffVO
 	for _, id := range descendantIDs {
 		dept, ok := allDepts[id]
@@ -74,19 +98,29 @@ func (s *departmentService) GetStaffByDeptRecursive(ctx context.Context, deptID 
 			continue
 		}
 		doctors := deptDoctors[id]
-		// 如果该科室没有医生，展示空部门也是合理的，所以不跳过
 
 		staffVOs := make([]vo.UserVO, 0, len(doctors))
 		for _, d := range doctors {
+			userID := uint(0)
+			employeeNo := d.EmployeeNo
+			if d.UserID != nil {
+				userID = *d.UserID
+				if u, ok := userMap[userID]; ok {
+					employeeNo = u.EmployeeNo
+				}
+			}
 			staffVOs = append(staffVOs, vo.UserVO{
-				ID:         0, // 这里需要关联 User 信息，或者单独查询，为简化演示，此处暂缺 User 关联
-				RealName:   d.RealName,
-				Phone:      d.Phone,
-				IsDoctor:   true,
-				DoctorID:   &d.ID,
-				Title:      d.Title,
-				Specialty:  d.Specialty,
-				EmployeeNo: d.EmployeeNo,
+				ID:             userID,
+				RealName:       d.RealName,
+				Phone:          d.Phone,
+				IsDoctor:       true,
+				DoctorID:       &d.ID,
+				Title:          d.Title,
+				Specialty:      d.Specialty,
+				EmployeeNo:     employeeNo,
+				Status:         int8(d.Status),
+				DepartmentID:   &dept.ID,
+				DepartmentName: dept.Name,
 			})
 		}
 

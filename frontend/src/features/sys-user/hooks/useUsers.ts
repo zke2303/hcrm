@@ -9,11 +9,11 @@ export function useUsers(params: UserListParams) {
   });
 }
 
-export function useUser(id: number) {
+export function useUser(id: number, enabled: boolean = true) {
   return useQuery({
     queryKey: ['user', id],
     queryFn: () => userApi.get(id).then(res => res.data ?? null),
-    enabled: !!id,
+    enabled: enabled && !!id,
   });
 }
 
