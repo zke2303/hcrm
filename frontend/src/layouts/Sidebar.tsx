@@ -1,8 +1,8 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { ChevronDown, ChevronRight, LayoutDashboard } from 'lucide-react';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/useAuthStore';
 
 interface MenuItem {
