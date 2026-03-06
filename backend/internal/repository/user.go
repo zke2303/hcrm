@@ -36,8 +36,6 @@ type UserRepository interface {
 	GetDataScope(ctx context.Context, userID uint) (int, []uint, error)
 }
 
-type txKey struct{}
-
 type userRepository struct {
 	gormDB *gorm.DB
 }

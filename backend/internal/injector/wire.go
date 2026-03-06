@@ -49,6 +49,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		service.NewRoleService,
 		service.NewMenuService,
 		service.NewDepartmentService,
+		service.NewDoctorService,
 		// 处理器层
 		handler.NewHealthHandler,
 		handler.NewAuthHandler,
@@ -56,6 +57,7 @@ func BuildApp(configPath string) (*app.App, func(), error) {
 		handler.NewRoleHandler,
 		handler.NewMenuHandler,
 		handler.NewDepartmentHandler,
+		handler.NewDoctorHandler,
 		// 应用
 		app.New,
 	)

@@ -37,6 +37,7 @@ type App struct {
 	roleHandler   *handler.RoleHandler
 	menuHandler   *handler.MenuHandler
 	deptHandler   *handler.DepartmentHandler
+	doctorHandler *handler.DoctorHandler
 
 	// Middleware components
 	jwt     *auth.JWTHelper
@@ -55,6 +56,7 @@ func New(
 	roleHandler *handler.RoleHandler,
 	menuHandler *handler.MenuHandler,
 	deptHandler *handler.DepartmentHandler,
+	doctorHandler *handler.DoctorHandler, // Added doctorHandler parameter
 	authSvc service.AuthService,
 	logRepo repository.OperationLogRepository,
 	jwt *auth.JWTHelper,
@@ -77,6 +79,7 @@ func New(
 		roleHandler:   roleHandler,
 		menuHandler:   menuHandler,
 		deptHandler:   deptHandler,
+		doctorHandler: doctorHandler,
 		authSvc:       authSvc,
 		logRepo:       logRepo,
 		jwt:           jwt,
@@ -121,6 +124,7 @@ func (a *App) registerRoutes() {
 		handler.RegisterRoleRoutes(protected, a.roleHandler)
 		handler.RegisterMenuRoutes(protected, a.menuHandler)
 		handler.RegisterDepartmentRoutes(protected, a.deptHandler)
+		handler.RegisterDoctorRoutes(protected, a.doctorHandler)
 	}
 }
 
