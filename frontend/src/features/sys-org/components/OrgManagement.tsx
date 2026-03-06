@@ -4,12 +4,18 @@ import {
   Group as PanelGroup,
   Separator as PanelResizeHandle,
 } from 'react-resizable-panels';
-import { Plus, Users, LayoutGrid } from 'lucide-react';
+import { Plus, Users, UserPlus } from 'lucide-react';
 import OrgTree from './OrgTree';
 import GroupedStaffList from './GroupedStaffList';
+import UserDialog from '../../sys-user/components/UserDialog';
 
 const OrgManagement: React.FC = () => {
   const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>();
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+
+  const handleAddStaff = () => {
+    setUserDialogOpen(true);
+  };
 
   return (
     <div className="m-4 p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-120px)]">
@@ -21,16 +27,11 @@ const OrgManagement: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <button 
-            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-all text-sm font-medium shadow-sm active:scale-95"
-          >
-            <LayoutGrid size={16} />
-            批量调整
-          </button>
-          <button 
+            onClick={handleAddStaff}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all text-sm font-medium shadow-sm active:scale-95"
           >
-            <Plus size={16} />
-            新增科室
+            <UserPlus size={16} />
+            新增人员/医生
           </button>
         </div>
       </div>
@@ -66,6 +67,12 @@ const OrgManagement: React.FC = () => {
           </Panel>
         </PanelGroup>
       </div>
+
+      <UserDialog 
+        open={userDialogOpen}
+        onClose={() => setUserDialogOpen(false)}
+        defaultDeptId={selectedDeptId}
+      />
     </div>
   );
 };

@@ -26,9 +26,10 @@ interface UserDialogProps {
   open: boolean;
   onClose: () => void;
   user?: UserType | null;
+  defaultDeptId?: number;
 }
 
-const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
+const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user, defaultDeptId }) => {
   const isEdit = !!user;
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
@@ -78,11 +79,12 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
           realName: '',
           phone: '',
           email: '',
+          departmentId: defaultDeptId || null,
           isDoctor: false,
         });
       }
     }
-  }, [user, reset, open]);
+  }, [user, reset, open, defaultDeptId]);
 
   const onSubmit = async (data: UserFormData) => {
     try {
