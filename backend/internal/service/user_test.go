@@ -60,6 +60,11 @@ func (m *MockUserRepository) Update(ctx context.Context, user *model.User) error
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error {
+	args := m.Called(ctx, id, data)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) Delete(ctx context.Context, id uint) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -159,6 +164,11 @@ func (m *MockDoctorRepository) Update(ctx context.Context, doctor *model.Doctor)
 	return args.Error(0)
 }
 
+func (m *MockDoctorRepository) UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error {
+	args := m.Called(ctx, id, data)
+	return args.Error(0)
+}
+
 func (m *MockDoctorRepository) GetByUserID(ctx context.Context, userID uint) (*model.Doctor, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
@@ -226,6 +236,16 @@ func (m *MockDepartmentRepository) FindDescendantIDs(ctx context.Context, rootID
 
 func (m *MockDepartmentRepository) Update(ctx context.Context, dept *model.Department) error {
 	args := m.Called(ctx, dept)
+	return args.Error(0)
+}
+
+func (m *MockDepartmentRepository) Create(ctx context.Context, dept *model.Department) error {
+	args := m.Called(ctx, dept)
+	return args.Error(0)
+}
+
+func (m *MockDepartmentRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 

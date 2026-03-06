@@ -7,6 +7,7 @@ import (
 
 	"hcrm/backend/internal/model"
 	"hcrm/backend/internal/repository"
+	"hcrm/backend/internal/schema/dto"
 	"hcrm/backend/internal/schema/vo"
 )
 
@@ -15,6 +16,8 @@ type DepartmentService interface {
 	GetFullTree(ctx context.Context) ([]*vo.DepartmentTreeVO, error)
 	GetStaffByDeptRecursive(ctx context.Context, deptID uint) ([]*vo.DepartmentStaffVO, error)
 	UpdateHierarchy(ctx context.Context, id uint, parentID *uint) error
+	Create(ctx context.Context, req *dto.CreateDeptRequest) error
+	Delete(ctx context.Context, id uint) error
 	AssignStaffToDepts(ctx context.Context, doctorID uint, deptIDs []uint) error
 	RemoveStaffFromDept(ctx context.Context, doctorID uint, deptID uint) error
 }
@@ -118,6 +121,12 @@ func (s *departmentService) UpdateHierarchy(ctx context.Context, id uint, parent
 				return errors.New("不能将科室移动到其子科室下")
 			}
 		}
+
+		// 业务逻辑校验：医院(1) 不能进入 医院(1)
+		parent, err := s.deptRepo.GetByID(ctx, *parentID)
+		if err == nil && dept.Type == 1 && parent.Type == 1 {
+			return errors.New("医院节点无法嵌套在医院节点内")
+		}
 	}
 
 	// 执行更新
@@ -128,6 +137,37 @@ func (s *departmentService) UpdateHierarchy(ctx context.Context, id uint, parent
 	}
 
 	return s.deptRepo.Update(ctx, dept)
+}
+
+func (s *departmentService) Create(ctx context.Context, req *dto.CreateDeptRequest) error {
+	// 业务逻辑校验：医院(1) 不能进入 医院(1)
+	if req.Type == 1 && req.ParentID != nil && *req.ParentID != 0 {
+		parent, err := s.deptRepo.GetByID(ctx, *req.ParentID)
+		if err == nil && parent.Type == 1 {
+			return errors.New("医院节点无法嵌套在医院节点内")
+		}
+	}
+
+	dept := &model.Department{
+		Name:     req.Name,
+		Code:     req.Code,
+		ParentID: req.ParentID,
+		Type:     req.Type,
+		Status:   req.Status,
+	}
+	if dept.Status == 0 {
+		dept.Status = 1
+	}
+	return s.deptRepo.Create(ctx, dept)
+}
+
+func (s *departmentService) Delete(ctx context.Context, id uint) error {
+	// 检查是否有子节点
+	descendantIDs, err := s.deptRepo.FindDescendantIDs(ctx, id)
+	if err == nil && len(descendantIDs) > 1 {
+		return errors.New("该节点包含子节点，请先删除或移动子节点")
+	}
+	return s.deptRepo.Delete(ctx, id)
 }
 
 func (s *departmentService) AssignStaffToDepts(ctx context.Context, doctorID uint, deptIDs []uint) error {

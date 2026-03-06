@@ -15,6 +15,8 @@ type DepartmentRepository interface {
 	FindAll(ctx context.Context) ([]*model.Department, error)
 	FindDescendantIDs(ctx context.Context, parentID uint) ([]uint, error)
 	Update(ctx context.Context, dept *model.Department) error
+	Create(ctx context.Context, dept *model.Department) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type departmentRepository struct {
@@ -105,4 +107,12 @@ func (r *departmentRepository) FindDescendantIDs(ctx context.Context, parentID u
 
 func (r *departmentRepository) Update(ctx context.Context, dept *model.Department) error {
 	return r.db(ctx).Save(dept).Error
+}
+
+func (r *departmentRepository) Create(ctx context.Context, dept *model.Department) error {
+	return r.db(ctx).Create(dept).Error
+}
+
+func (r *departmentRepository) Delete(ctx context.Context, id uint) error {
+	return r.db(ctx).Delete(&model.Department{}, id).Error
 }

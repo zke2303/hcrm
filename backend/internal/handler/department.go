@@ -34,7 +34,7 @@ func (h *DepartmentHandler) GetTree(c *gin.Context) {
 func (h *DepartmentHandler) GetStaffByDept(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	
+
 	staff, err := h.deptSvc.GetStaffByDeptRecursive(c.Request.Context(), uint(id))
 	if err != nil {
 		_ = c.Error(err)
@@ -47,7 +47,7 @@ func (h *DepartmentHandler) GetStaffByDept(c *gin.Context) {
 func (h *DepartmentHandler) UpdateHierarchy(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	
+
 	var req dto.UpdateDeptHierarchyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(err)
@@ -59,6 +59,33 @@ func (h *DepartmentHandler) UpdateHierarchy(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"code": 200, "data": nil, "msg": "更新成功"})
+}
+
+// Create 创建组织节点
+func (h *DepartmentHandler) Create(c *gin.Context) {
+	var req dto.CreateDeptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	if err := h.deptSvc.Create(c.Request.Context(), &req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": nil, "msg": "创建成功"})
+}
+
+// Delete 删除组织节点
+func (h *DepartmentHandler) Delete(c *gin.Context) {
+	idStr := c.Param("id")
+	id, _ := strconv.Atoi(idStr)
+
+	if err := h.deptSvc.Delete(c.Request.Context(), uint(id)); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"code": 200, "data": nil, "msg": "删除成功"})
 }
 
 // AssignStaff 分配人员到科室
@@ -83,6 +110,8 @@ func RegisterDepartmentRoutes(r *gin.RouterGroup, h *DepartmentHandler) {
 		depts.GET("/tree", h.GetTree)
 		depts.GET("/:id/staff", h.GetStaffByDept)
 		depts.PUT("/:id/hierarchy", h.UpdateHierarchy)
+		depts.POST("", h.Create)
 		depts.POST("/staff-move", h.AssignStaff)
+		depts.DELETE("/:id", h.Delete)
 	}
 }
