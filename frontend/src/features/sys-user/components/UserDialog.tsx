@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Edit3, Loader2, Plus, X } from 'lucide-react';
+import { Edit3, Loader2, Plus, X, User as UserIcon, ShieldCheck, Stethoscope, Mail, Phone, Info } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -20,7 +20,7 @@ const userSchema = z.object({
   introduction: z.string().optional(),
 });
 
-type UserFormData = any; // 使用 any 规避复杂的 RHF + Zod 类型冲突
+type UserFormData = z.infer<typeof userSchema>;
 
 interface UserDialogProps {
   open: boolean;
@@ -43,6 +43,7 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -57,50 +58,47 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
   const isDoctor = watch('isDoctor');
 
   useEffect(() => {
-    if (user) {
-      reset({
-        username: user.username,
-        realName: user.realName,
-        phone: user.phone,
-        email: user.email || '',
-        departmentId: user.departmentId,
-        remark: user.remark || '',
-        isDoctor: user.isDoctor || false,
-        title: user.title || '',
-        specialty: user.specialty || '',
-        introduction: user.introduction || '',
-      });
-    } else {
-      reset({
-        username: '',
-        realName: '',
-        phone: '',
-        email: '',
-        isDoctor: false,
-      });
+    if (open) {
+      if (user) {
+        reset({
+          username: user.username,
+          realName: user.realName,
+          phone: user.phone,
+          email: user.email || '',
+          departmentId: user.departmentId,
+          remark: user.remark || '',
+          isDoctor: user.isDoctor || false,
+          title: user.title || '',
+          specialty: user.specialty || '',
+          introduction: user.introduction || '',
+        });
+      } else {
+        reset({
+          username: '',
+          realName: '',
+          phone: '',
+          email: '',
+          isDoctor: false,
+        });
+      }
     }
-  }, [user, reset]);
+  }, [user, reset, open]);
 
   const onSubmit = async (data: UserFormData) => {
     try {
       if (isEdit) {
-        // 保留原有的角色和工号，防止在更新基础信息时被清空
-        // 保留原有的角色和工号，防止在更新基础信息时被清空
-        // 注意：如果列表没有返回完整的 roles，会导致这里 roleIds 为空数组而被清空。
         const updateData: any = {
           ...data,
           employeeNo: user!.employeeNo,
         };
-
         await updateUser.mutateAsync({ id: user!.id, data: updateData });
         message.success('用户信息更新成功');
       } else {
         const resp = await createUser.mutateAsync(data as any);
-        // Show success message with employee number and default password
         const result = resp as any;
         if (result && result.employeeNo) {
           message.success(
-            `新增用户成功！工号: ${result.employeeNo}，默认密码: ${result.defaultPassword}。请妥善保管登录信息。`
+            `新增用户成功！工号: ${result.employeeNo}，默认密码: 123456。`
           );
         } else {
           message.success('新增用户成功');
@@ -112,183 +110,211 @@ const UserDialog: React.FC<UserDialogProps> = ({ open, onClose, user }) => {
     }
   };
 
+  if (!open) return null;
+
   return (
-    <>
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-gray-900/50 transition-opacity"
-            onClick={onClose}
-          />
-
-          {/* Dialog Panel - width expanded slightly, max-height bound */}
-          <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] mx-auto overflow-hidden">
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                {isEdit ? <Edit3 size={20} className="text-blue-600" /> : <Plus size={20} className="text-blue-600" />}
-                {isEdit ? '编辑用户' : '新增用户'}
-              </h3>
-              <button
-                onClick={onClose}
-                className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                <X size={20} />
-              </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gray-900/60 transition-opacity backdrop-blur-sm" onClick={onClose} />
+      
+      <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl text-white shadow-lg ${isEdit ? 'bg-blue-600 shadow-blue-200' : 'bg-emerald-600 shadow-emerald-200'}`}>
+              {isEdit ? <Edit3 size={24} /> : <Plus size={24} />}
             </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">{isEdit ? '编辑系统用户' : '新建系统用户'}</h3>
+              <p className="text-sm text-gray-500 font-medium">配置账号登录凭证、人员基本信息及科室归属</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
+            <X size={24} />
+          </button>
+        </div>
 
-            {/* Content Body */}
-            <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-6 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-
-                {/* 账号信息 Divider */}
-                <div className="col-span-1 md:col-span-2 text-base font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                  账号信息
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">登录账号 <span className="text-red-500">*</span></label>
+        {/* Content Body */}
+        <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1 p-8 md:p-10">
+          <div className="space-y-10">
+            {/* Section: Account Info */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
+                <h4 className="text-base font-bold text-gray-900 tracking-tight">账号登录信息</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <UserIcon size={14} className="text-gray-400" />
+                    登录账号 <span className="text-red-500">*</span>
+                  </label>
                   <input
                     {...register('username')}
                     disabled={isEdit}
-                    placeholder="请输入登录账号"
-                    className={`w-full px-4 py-2 bg-white border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 transition-shadow`}
+                    placeholder="请输入登录名 (建议使用姓名拼音)"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.username ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all ${isEdit ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
                   />
-                  {errors.username && <p className="text-sm text-red-500">{(errors.username.message as string)}</p>}
+                  {errors.username && <p className="text-xs text-red-500 mt-1 font-medium">{errors.username.message}</p>}
                 </div>
 
-                {/* 提示：密码和工号将自动生成 */}
                 {!isEdit && (
-                  <div className="col-span-1 md:col-span-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      <strong>提示：</strong>工号将自动生成（格式：EMP + 5位数字），默认密码为 <code className="px-1 py-0.5 bg-amber-100 rounded">123456</code>
-                    </p>
+                  <div className="md:col-span-2 p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3">
+                    <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-700 leading-relaxed font-medium">
+                      工号将由系统自动分配（EMP + 序列号），初始默认登录密码为 <span className="bg-amber-100 px-1.5 py-0.5 rounded font-bold border border-amber-200 text-amber-900 mx-1">123456</span>，请在创建成功后通知用户及时修改。
+                    </div>
                   </div>
                 )}
+              </div>
+            </section>
 
-                {/* 基本资料 Divider */}
-                <div className="col-span-1 md:col-span-2 text-base font-semibold text-gray-900 border-b border-gray-200 pb-2 mt-4">
-                  基本资料
+            {/* Section: Profile Info */}
+            <section>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-5 bg-indigo-600 rounded-full" />
+                <h4 className="text-base font-bold text-gray-900 tracking-tight">人员基础资料</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700">真实姓名 <span className="text-red-500">*</span></label>
+                  <input
+                    {...register('realName')}
+                    placeholder="请输入人员法定姓名"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.realName ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all`}
+                  />
+                  {errors.realName && <p className="text-xs text-red-500 mt-1 font-medium">{errors.realName.message}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">所属科室</label>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Phone size={14} className="text-gray-400" />
+                    手机号码 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register('phone')}
+                    placeholder="请输入11位手机号"
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all`}
+                  />
+                  {errors.phone && <p className="text-xs text-red-500 mt-1 font-medium">{errors.phone.message}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-gray-400" />
+                    所属管理科室
+                  </label>
                   <select
                     {...register('departmentId', { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
-                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all appearance-none cursor-pointer"
                   >
                     <option value="">暂无所属科室</option>
-                    {departments.map((d: any) => (
+                    {departments.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
                   </select>
-                  {errors.departmentId && <p className="text-sm text-red-500">{(errors.departmentId.message as string)}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">真实姓名 <span className="text-red-500">*</span></label>
-                  <input
-                    {...register('realName')}
-                    placeholder="请输入真实姓名"
-                    className={`w-full px-4 py-2 bg-white border ${errors.realName ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
-                  />
-                  {errors.realName && <p className="text-sm text-red-500">{(errors.realName.message as string)}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">手机号码 <span className="text-red-500">*</span></label>
-                  <input
-                    {...register('phone')}
-                    placeholder="请输入手机号码"
-                    className={`w-full px-4 py-2 bg-white border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow`}
-                  />
-                  {errors.phone && <p className="text-sm text-red-500">{(errors.phone.message as string)}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">电子邮箱</label>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Mail size={14} className="text-gray-400" />
+                    电子邮箱
+                  </label>
                   <input
                     {...register('email')}
-                    placeholder="选填"
-                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    placeholder="用于接收系统通知 (选填)"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all"
                   />
                 </div>
+              </div>
+            </section>
 
-                {/* 医生开关 */}
-                <div className="col-span-1 md:col-span-2 mt-4 p-5 border border-blue-100 bg-blue-50/50 rounded-lg">
+            {/* Section: Doctor Toggle */}
+            <section>
+              <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      {...register('isDoctor')}
-                      id="isDoctorCheckbox"
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="isDoctorCheckbox" className="font-semibold text-sm text-gray-900 cursor-pointer select-none">
-                      标记为医务人员 (开启医生档案)
-                    </label>
-                  </div>
-
-                  {isDoctor && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-blue-100">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">医疗职称/职务</label>
-                        <select
-                          {...register('title')}
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">请选择职称</option>
-                          {titles.map(t => (
-                            <option key={t.id} value={t.name}>{t.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">专业领域</label>
-                        <input
-                          {...register('specialty')}
-                          placeholder="如: 心血管内科"
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div className="col-span-1 md:col-span-2 space-y-2">
-                        <label className="text-sm font-medium text-gray-700">个人简介</label>
-                        <textarea
-                          {...register('introduction')}
-                          rows={3}
-                          placeholder="可选填医生简介信息..."
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                        />
-                      </div>
+                    <div className="p-2 bg-blue-600 rounded-lg text-white">
+                      <Stethoscope size={20} />
                     </div>
-                  )}
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 tracking-tight">医务人员标记</h4>
+                      <p className="text-[11px] text-blue-600 font-bold opacity-70">开启后将同步建立医生临床档案</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" {...register('isDoctor')} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-2.5 border border-gray-300 shadow-sm text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center justify-center min-w-[90px] gap-2 px-5 py-2.5 shadow-sm bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 transition-colors"
-                >
-                  {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                  {isSubmitting ? '保存中...' : '确定'}
-                </button>
+                {isDoctor && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 pt-6 border-t border-blue-100 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">临床职称</label>
+                      <select
+                        {...register('title')}
+                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer appearance-none"
+                      >
+                        <option value="">请选择职称</option>
+                        {titles.map(t => (
+                          <option key={t.id} value={t.name}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">专业特长</label>
+                      <input
+                        {...register('specialty')}
+                        placeholder="如: 介入心脏病学"
+                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className="text-sm font-semibold text-gray-700">个人临床简介</label>
+                      <textarea
+                        {...register('introduction')}
+                        rows={3}
+                        placeholder="请简要介绍医生的教育背景、科研成果等..."
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all resize-none shadow-inner"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            </form>
+            </section>
           </div>
+        </form>
+
+        {/* Action Buttons */}
+        <div className="px-8 py-6 border-t border-gray-100 flex justify-end gap-4 bg-gray-50/30">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm"
+          >
+            取消
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            className={`
+              flex items-center justify-center min-w-[120px] gap-2 px-8 py-2.5 text-white text-sm font-bold rounded-xl transition-all active:scale-95 shadow-md
+              ${isEdit 
+                ? 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-200 shadow-blue-100' 
+                : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-200 shadow-emerald-100'
+              }
+              disabled:opacity-50 disabled:cursor-not-allowed
+            `}
+          >
+            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : null}
+            {isSubmitting ? '正在提交...' : (isEdit ? '保存更改' : '创建用户')}
+          </button>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 
