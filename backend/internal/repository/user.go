@@ -19,6 +19,7 @@ type UserRepository interface {
 	List(ctx context.Context, req *dto.ListUserRequest) ([]*model.User, int64, error)
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
+	UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error
 	Delete(ctx context.Context, id uint) error
 	UpdateStatus(ctx context.Context, id uint, status int8) error
 	ResetPassword(ctx context.Context, id uint, passwordHash string) error
@@ -145,6 +146,10 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	return r.db(ctx).Save(user).Error
+}
+
+func (r *userRepository) UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error {
+	return r.db(ctx).Model(&model.User{}).Where("id = ?", id).Updates(data).Error
 }
 
 func (r *userRepository) Delete(ctx context.Context, id uint) error {

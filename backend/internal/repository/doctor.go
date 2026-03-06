@@ -18,6 +18,7 @@ type DoctorRepository interface {
 	List(ctx context.Context, req *dto.ListDoctorRequest) ([]*model.Doctor, int64, error)
 	Create(ctx context.Context, doctor *model.Doctor) error
 	Update(ctx context.Context, doctor *model.Doctor) error
+	UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error
 	Delete(ctx context.Context, id uint) error
 	UpdateDepartments(ctx context.Context, doctorID uint, deptIDs []uint, primaryDeptID uint) error
 	FindInDepartments(ctx context.Context, deptIDs []uint) (map[uint][]*model.Doctor, error)
@@ -124,6 +125,10 @@ func (r *doctorRepository) Create(ctx context.Context, doctor *model.Doctor) err
 
 func (r *doctorRepository) Update(ctx context.Context, doctor *model.Doctor) error {
 	return r.db(ctx).Save(doctor).Error
+}
+
+func (r *doctorRepository) UpdateMap(ctx context.Context, id uint, data map[string]interface{}) error {
+	return r.db(ctx).Model(&model.Doctor{}).Where("id = ?", id).Updates(data).Error
 }
 
 func (r *doctorRepository) Delete(ctx context.Context, id uint) error {
