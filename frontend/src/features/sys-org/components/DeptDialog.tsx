@@ -1,9 +1,9 @@
+import { useMessage } from '@/components/common/MessageContext';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Edit3, Loader2, Plus, X, Building2, Folder, Info } from 'lucide-react';
+import { Building2, Folder, Info, Loader2, Plus, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useMessage } from '@/components/common/MessageContext';
 import { useCreateDept } from '../hooks/useOrg';
 import type { DepartmentTreeVO } from '../types';
 
@@ -11,8 +11,8 @@ const deptSchema = z.object({
   name: z.string().min(2, '名称至少2个字符'),
   code: z.string().min(2, '编码至少2个字符'),
   parentId: z.number().nullable(),
-  status: z.number().default(1),
-  type: z.number().default(2), // 1-医院/机构, 2-科室
+  status: z.number(),
+  type: z.number(), // 1-医院/机构, 2-科室
 });
 
 type DeptFormData = z.infer<typeof deptSchema>;
@@ -60,6 +60,12 @@ const DeptDialog: React.FC<DeptDialogProps> = ({ open, onClose, parent }) => {
   }, [open, parent, reset]);
 
   const onSubmit = async (data: DeptFormData) => {
+    // 逻辑验证：医院(1) 不能创建在 医院(1) 之内
+    if (data.type === 1 && parent?.type === 1) {
+      message.error('医院节点无法创建在另一个医院节点内');
+      return;
+    }
+
     try {
       await createDept.mutateAsync(data);
       message.success('新增科室/节点成功');
@@ -200,7 +206,6 @@ const DeptDialog: React.FC<DeptDialogProps> = ({ open, onClose, parent }) => {
           </button>
           <button
             type="submit"
-            onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
             className="flex items-center justify-center min-w-[120px] gap-2 px-8 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 transition-all active:scale-95 shadow-md shadow-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >

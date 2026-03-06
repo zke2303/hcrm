@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, Folder, Building2, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
-import { useDeptTree, useUpdateDeptHierarchy, useDeleteDept } from '../hooks/useOrg';
-import type { DepartmentTreeVO } from '../types';
 import { useConfirm } from '@/components/common/ConfirmContext';
 import { useMessage } from '@/components/common/MessageContext';
+import { Building2, ChevronDown, ChevronRight, Folder, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useDeleteDept, useDeptTree, useUpdateDeptHierarchy } from '../hooks/useOrg';
+import type { DepartmentTreeVO } from '../types';
 import DeptDialog from './DeptDialog';
 
 interface OrgTreeProps {
@@ -20,9 +20,9 @@ const TreeNode: React.FC<{
   toggleExpand: (id: number) => void;
   onAddChild: (node: DepartmentTreeVO) => void;
   onDelete: (id: number) => void;
-  onDragStart: (e: React.DragEvent, id: number) => void;
+  onDragStart: (e: React.DragEvent, node: DepartmentTreeVO) => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent, targetId: number) => void;
+  onDrop: (e: React.DragEvent, targetNode: DepartmentTreeVO) => void;
 }> = ({ 
   node, depth, selectedId, onSelect, expandedIds, toggleExpand,
   onAddChild, onDelete,
@@ -36,9 +36,9 @@ const TreeNode: React.FC<{
     <div className="select-none">
       <div 
         draggable
-        onDragStart={(e) => onDragStart(e, node.id)}
+        onDragStart={(e) => onDragStart(e, node)}
         onDragOver={handleDragOver}
-        onDrop={(e) => onDrop(e, node.id)}
+        onDrop={(e) => onDrop(e, node)}
         onClick={() => onSelect(node.id)}
         className={`group flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer transition-all ${
           isSelected 
@@ -159,21 +159,29 @@ const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, id: number) => {
-    e.dataTransfer.setData('sourceId', id.toString());
+  const handleDragStart = (e: React.DragEvent, node: DepartmentTreeVO) => {
+    e.dataTransfer.setData('sourceId', node.id.toString());
+    e.dataTransfer.setData('sourceType', node.type.toString());
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDrop = async (e: React.DragEvent, targetId: number) => {
+  const handleDrop = async (e: React.DragEvent, targetNode: DepartmentTreeVO) => {
     e.preventDefault();
     const sourceId = parseInt(e.dataTransfer.getData('sourceId'));
+    const sourceType = parseInt(e.dataTransfer.getData('sourceType'));
     
-    if (sourceId === targetId) return;
+    if (sourceId === targetNode.id) return;
+
+    // 逻辑验证：医院(1) 不能进入 医院(1)
+    if (sourceType === 1 && targetNode.type === 1) {
+      message.error('医院节点无法嵌套在医院节点内');
+      return;
+    }
 
     try {
       await updateHierarchy.mutateAsync({
         id: sourceId,
-        data: { parentId: targetId }
+        data: { parentId: targetNode.id }
       });
       message.success('组织架构调整成功');
     } catch (err) {
