@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, Folder, Building2, GripVertical, Loader2 } from 'lucide-react';
-import { useDeptTree, useUpdateDeptHierarchy } from '../hooks/useOrg';
+import { ChevronRight, ChevronDown, Folder, Building2, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useDeptTree, useUpdateDeptHierarchy, useDeleteDept } from '../hooks/useOrg';
 import type { DepartmentTreeVO } from '../types';
+import { useConfirm } from '@/components/common/ConfirmContext';
+import { useMessage } from '@/components/common/MessageContext';
+import DeptDialog from './DeptDialog';
 
 interface OrgTreeProps {
   selectedId?: number;
@@ -15,11 +18,14 @@ const TreeNode: React.FC<{
   onSelect: (id: number) => void;
   expandedIds: Set<number>;
   toggleExpand: (id: number) => void;
+  onAddChild: (node: DepartmentTreeVO) => void;
+  onDelete: (id: number) => void;
   onDragStart: (e: React.DragEvent, id: number) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, targetId: number) => void;
 }> = ({ 
   node, depth, selectedId, onSelect, expandedIds, toggleExpand,
+  onAddChild, onDelete,
   onDragStart, onDragOver, onDrop
 }) => {
   const isExpanded = expandedIds.has(node.id);
@@ -34,14 +40,14 @@ const TreeNode: React.FC<{
         onDragOver={handleDragOver}
         onDrop={(e) => onDrop(e, node.id)}
         onClick={() => onSelect(node.id)}
-        className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-all ${
+        className={`group flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer transition-all ${
           isSelected 
             ? 'bg-blue-600 text-white shadow-md' 
             : 'text-gray-600 hover:bg-gray-100'
         }`}
         style={{ marginLeft: depth * 16 }}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <div 
             onClick={(e) => {
               e.stopPropagation();
@@ -59,8 +65,26 @@ const TreeNode: React.FC<{
           ) : (
              <Folder size={16} className={isSelected ? 'text-blue-100' : 'text-orange-400'} />
           )}
+          <span className="text-sm font-medium truncate">{node.name}</span>
         </div>
-        <span className="text-sm font-medium truncate">{node.name}</span>
+
+        {/* Action Buttons */}
+        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isSelected ? 'text-white' : ''}`}>
+           <button 
+             onClick={(e) => { e.stopPropagation(); onAddChild(node); }}
+             className={`p-1 rounded hover:bg-black/10 transition-colors`}
+             title="新增下级"
+           >
+             <Plus size={14} />
+           </button>
+           <button 
+             onClick={(e) => { e.stopPropagation(); onDelete(node.id); }}
+             className={`p-1 rounded hover:bg-black/10 transition-colors ${isSelected ? 'hover:text-red-100' : 'hover:text-red-500'}`}
+             title="删除节点"
+           >
+             <Trash2 size={14} />
+           </button>
+        </div>
       </div>
 
       {hasChildren && isExpanded && (
@@ -74,6 +98,8 @@ const TreeNode: React.FC<{
               onSelect={onSelect}
               expandedIds={expandedIds}
               toggleExpand={toggleExpand}
+              onAddChild={onAddChild}
+              onDelete={onDelete}
               onDragStart={onDragStart}
               onDragOver={onDragOver}
               onDrop={onDrop}
@@ -93,7 +119,13 @@ const handleDragOver = (e: React.DragEvent) => {
 const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
   const { data: tree, isLoading } = useDeptTree();
   const updateHierarchy = useUpdateDeptHierarchy();
+  const deleteDept = useDeleteDept();
+  const { confirm } = useConfirm();
+  const message = useMessage();
+
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [parentDept, setParentDept] = useState<DepartmentTreeVO | null>(null);
 
   const toggleExpand = (id: number) => {
     setExpandedIds(prev => {
@@ -102,6 +134,29 @@ const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
       else next.add(id);
       return next;
     });
+  };
+
+  const handleAddChild = (parent: DepartmentTreeVO) => {
+    setParentDept(parent);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    const ok = await confirm({
+      title: '删除节点确认',
+      message: '确定要删除该组织节点吗？如果该节点下包含子节点或已分配人员，可能导致删除失败。',
+      confirmLabel: '确定删除',
+      variant: 'danger'
+    });
+
+    if (ok) {
+      try {
+        await deleteDept.mutateAsync(id);
+        message.success('节点删除成功');
+      } catch (err: any) {
+        message.error(err.response?.data?.message || '删除失败，请检查是否包含子节点或人员');
+      }
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, id: number) => {
@@ -120,8 +175,9 @@ const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
         id: sourceId,
         data: { parentId: targetId }
       });
+      message.success('组织架构调整成功');
     } catch (err) {
-      console.error('Failed to update hierarchy', err);
+      message.error('架构调整失败');
     }
   };
 
@@ -136,6 +192,17 @@ const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
 
   return (
     <div className="space-y-1">
+      <div className="flex items-center justify-between mb-2 px-2">
+         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">全院架构树</span>
+         <button 
+           onClick={() => { setParentDept(null); setDialogOpen(true); }}
+           className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+           title="新增顶级节点"
+         >
+           <Plus size={14} />
+         </button>
+      </div>
+
       {tree?.map(node => (
         <TreeNode 
           key={node.id} 
@@ -145,11 +212,21 @@ const OrgTree: React.FC<OrgTreeProps> = ({ selectedId, onSelect }) => {
           onSelect={onSelect}
           expandedIds={expandedIds}
           toggleExpand={toggleExpand}
+          onAddChild={handleAddChild}
+          onDelete={handleDelete}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         />
       ))}
+
+      {dialogOpen && (
+        <DeptDialog 
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          parent={parentDept}
+        />
+      )}
     </div>
   );
 };

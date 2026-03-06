@@ -4,6 +4,8 @@ export interface DepartmentTreeVO {
 	type: number; // 1-医院, 2-科室
 	parentId?: number;
 	children?: DepartmentTreeVO[];
+	code?: string;
+	status?: number;
 }
 
 export interface UserVO {
@@ -31,6 +33,14 @@ export interface DepartmentStaffVO {
 
 export interface UpdateDeptHierarchyRequest {
 	parentId: number | null;
+}
+
+export interface CreateDeptRequest {
+	name: string;
+	code: string;
+	parentId: number | null;
+	status: number;
+	type: number;
 }
 
 export interface AssignStaffToDeptRequest {
